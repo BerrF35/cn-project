@@ -1,0 +1,121 @@
+================================================================================
+CISCO PACKET TRACER - ENDPOINT & SERVER STATIC IP ADDRESSING REFERENCE
+================================================================================
+
+HOW TO CONFIGURE IN PACKET TRACER:
+1. Click on any PC / Laptop / Server in Packet Tracer.
+2. Click the "Desktop" tab at the top.
+3. Click "IP Configuration".
+4. Enter the values listed below for that device.
+
+--------------------------------------------------------------------------------
+1. HUMAN RESOURCES DEPARTMENT (VLAN 20) - Connect to ACC-SW-A
+--------------------------------------------------------------------------------
+Device: HR-PC-01 (HR Lead Workstation)
+  Switch Port: ACC-SW-A FastEthernet0/2
+  IP Address:  10.20.20.10
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.20.1
+  DNS Server:  10.20.80.11
+
+Device: HR-PC-02 (Payroll Specialist PC)
+  Switch Port: ACC-SW-A FastEthernet0/3
+  IP Address:  10.20.20.11
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.20.1
+  DNS Server:  10.20.80.11
+
+--------------------------------------------------------------------------------
+2. FINANCE & ACCOUNTING DEPARTMENT (VLAN 30) - Connect to ACC-SW-A
+--------------------------------------------------------------------------------
+Device: FIN-PC-01 (Chief Accountant PC)
+  Switch Port: ACC-SW-A FastEthernet0/4
+  IP Address:  10.20.30.10
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.30.1
+  DNS Server:  10.20.80.11
+
+Device: FIN-PC-02 (Auditor Workstation)
+  Switch Port: ACC-SW-A FastEthernet0/5
+  IP Address:  10.20.30.11
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.30.1
+  DNS Server:  10.20.80.11
+
+--------------------------------------------------------------------------------
+3. ENGINEERING & R&D DEPARTMENT (VLAN 40) - Connect to ACC-SW-B
+--------------------------------------------------------------------------------
+Device: ENG-CAD-01 (Lead Hardware Designer)
+  Switch Port: ACC-SW-B FastEthernet0/2
+  IP Address:  10.20.40.10
+  Subnet Mask: 255.255.254.0   <-- Note /23 Subnet Mask!
+  Default GW:  10.20.40.1
+  DNS Server:  10.20.80.11
+
+Device: ENG-DEV-02 (Firmware Developer PC)
+  Switch Port: ACC-SW-B FastEthernet0/3
+  IP Address:  10.20.40.11
+  Subnet Mask: 255.255.254.0   <-- Note /23 Subnet Mask!
+  Default GW:  10.20.40.1
+  DNS Server:  10.20.80.11
+
+--------------------------------------------------------------------------------
+4. PRODUCTION & INDUSTRIAL OT / SCADA (VLAN 50) - Connect to ACC-SW-B
+--------------------------------------------------------------------------------
+Device: PROD-SCADA-01 (Assembly Line HMI Console)
+  Switch Port: ACC-SW-B FastEthernet0/4
+  IP Address:  10.20.50.10
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.50.1
+  DNS Server:  10.20.80.11
+
+Device: PROD-PLC-02 (Robotics Automation Controller)
+  Switch Port: ACC-SW-B FastEthernet0/5
+  IP Address:  10.20.50.11
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.50.1
+  DNS Server:  10.20.80.11
+
+--------------------------------------------------------------------------------
+5. CORPORATE STAFF (VLAN 60) - Connect to ACC-SW-C
+--------------------------------------------------------------------------------
+Device: STAFF-LAPTOP-01 (Marketing Manager)
+  Switch Port: ACC-SW-C FastEthernet0/1
+  IP Address:  10.20.60.10
+  Subnet Mask: 255.255.254.0   <-- Note /23 Subnet Mask!
+  Default GW:  10.20.60.1
+  DNS Server:  10.20.80.11
+
+--------------------------------------------------------------------------------
+6. DATA CENTER SERVERS (VLAN 80) - Connect to ACC-SW-C
+--------------------------------------------------------------------------------
+Device: SRV-DC-DHCP (Domain Controller & DHCP Server)
+  Switch Port: ACC-SW-C FastEthernet0/4
+  IP Address:  10.20.80.10
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.80.1
+  DNS Server:  10.20.80.11
+
+Device: SRV-DNS-AUTH (Enterprise BIND9 DNS Server)
+  Switch Port: ACC-SW-C FastEthernet0/5
+  IP Address:  10.20.80.11
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.80.1
+  DNS Server:  127.0.0.1
+
+Device: SRV-ERP-INTERNAL (SAP S/4HANA Database Server)
+  Switch Port: ACC-SW-C FastEthernet0/6
+  IP Address:  10.20.80.12
+  Subnet Mask: 255.255.255.0
+  Default GW:  10.20.80.1
+  DNS Server:  10.20.80.11
+
+--------------------------------------------------------------------------------
+7. DMZ PUBLIC SERVICES (VLAN 100) - Connect to Router Gi0/2 (or DMZ Switch)
+--------------------------------------------------------------------------------
+Device: DMZ-WEB-PUBLIC (Nginx Public Web Portal)
+  IP Address:  10.20.100.10
+  Subnet Mask: 255.255.255.224  <-- Note /27 Subnet Mask!
+  Default GW:  10.20.100.1
+  DNS Server:  8.8.8.8
+================================================================================

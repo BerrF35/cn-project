@@ -1,0 +1,100 @@
+! ==============================================================================
+! CISCO PACKET TRACER CONFIGURATION SCRIPT
+! DEVICE: ACCESS SWITCH A (Catalyst 2960-24TT) - BUILDING 1
+! ROLE: Serving HR (VLAN 20), Finance (VLAN 30), and Management (VLAN 10)
+! ==============================================================================
+!
+! INSTRUCTIONS:
+! 1. In Packet Tracer, click on Access Switch A (Catalyst 2960).
+! 2. Click on the "CLI" tab.
+! 3. Type "enable" and press Enter.
+! 4. Type "configure terminal" and press Enter.
+! 5. Copy ALL lines below and click the "Paste" button on the bottom-right of the CLI window.
+! ==============================================================================
+
+hostname ACC-SW-A
+
+! -----------------------------------------------------------------------------
+! VLAN Database Provisioning
+! -----------------------------------------------------------------------------
+vlan 10
+ name Management
+vlan 20
+ name Human_Resources
+vlan 30
+ name Finance_Accounting
+exit
+
+! -----------------------------------------------------------------------------
+! Trunk Uplink to Core Switch (Catalyst 2960 uses native 802.1Q)
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/1
+ description 802.1Q Trunk Uplink to Core Switch Gi0/1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,80
+ switchport trunk native vlan 1
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 10 (Network Management)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/1
+ description IT Admin Console (VLAN 10)
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 20 (Human Resources Department)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/2
+ description HR-PC-01 (HR Lead Workstation - 10.20.20.10)
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/3
+ description HR-PC-02 (Payroll Specialist PC - 10.20.20.11)
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 30 (Finance & Accounting Department)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/4
+ description FIN-PC-01 (Chief Accountant PC - 10.20.30.10)
+ switchport mode access
+ switchport access vlan 30
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/5
+ description FIN-PC-02 (Auditor Workstation - 10.20.30.11)
+ switchport mode access
+ switchport access vlan 30
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Switchport Security Hardening: Administratively Disable Unused Ports
+! -----------------------------------------------------------------------------
+interface range FastEthernet0/6 - 24, GigabitEthernet0/2
+ description Unused Ports Disabled for Physical Security
+ shutdown
+
+! -----------------------------------------------------------------------------
+! Switch Management IP Address (VLAN 10)
+! -----------------------------------------------------------------------------
+interface Vlan10
+ description Management SVI
+ ip address 10.20.10.2 255.255.255.192
+ no shutdown
+
+ip default-gateway 10.20.10.1
+
+end
+write memory

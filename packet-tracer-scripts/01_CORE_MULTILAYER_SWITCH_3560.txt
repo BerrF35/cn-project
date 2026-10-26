@@ -1,0 +1,157 @@
+! ==============================================================================
+! CISCO PACKET TRACER CONFIGURATION SCRIPT
+! DEVICE: CORE MULTILAYER SWITCH (Catalyst 3560-24PS or Catalyst 3650)
+! ROLE: Inter-VLAN Routing Core, SVIs for VLANs 10-90, DHCP Relay & Default Route
+! ==============================================================================
+!
+! INSTRUCTIONS:
+! 1. In Packet Tracer, click on the Multilayer Switch (3560 or 3650).
+! 2. Click on the "CLI" tab.
+! 3. If asked "Would you like to enter the initial configuration dialog? [yes/no]:", type "no" and press Enter.
+! 4. Type "enable" and press Enter.
+! 5. Type "configure terminal" and press Enter.
+! 6. Copy ALL lines below and click the "Paste" button on the bottom-right of the CLI window.
+! ==============================================================================
+
+hostname CORE-SW-01
+
+! Enable Hardware Layer 3 IP Routing
+ip routing
+
+! -----------------------------------------------------------------------------
+! VLAN Database Creation
+! -----------------------------------------------------------------------------
+vlan 10
+ name Management
+vlan 20
+ name Human_Resources
+vlan 30
+ name Finance_Accounting
+vlan 40
+ name Engineering_R_D
+vlan 50
+ name Production_OT
+vlan 60
+ name Corporate_Staff
+vlan 70
+ name Guest_WiFi
+vlan 80
+ name DC_Servers
+vlan 90
+ name Printers_IoT
+exit
+
+! -----------------------------------------------------------------------------
+! Switch Virtual Interfaces (SVIs) - Default Gateways for each department
+! -----------------------------------------------------------------------------
+interface Vlan10
+ description Gateway for Management VLAN 10
+ ip address 10.20.10.1 255.255.255.192
+ no shutdown
+
+interface Vlan20
+ description Gateway for HR Department VLAN 20
+ ip address 10.20.20.1 255.255.255.0
+ ip helper-address 10.20.80.10
+ no shutdown
+
+interface Vlan30
+ description Gateway for Finance Department VLAN 30
+ ip address 10.20.30.1 255.255.255.0
+ ip helper-address 10.20.80.10
+ no shutdown
+
+interface Vlan40
+ description Gateway for Engineering / R&D VLAN 40
+ ip address 10.20.40.1 255.255.254.0
+ ip helper-address 10.20.80.10
+ no shutdown
+
+interface Vlan50
+ description Gateway for Production / OT VLAN 50
+ ip address 10.20.50.1 255.255.255.0
+ no shutdown
+
+interface Vlan60
+ description Gateway for Corporate Staff VLAN 60
+ ip address 10.20.60.1 255.255.254.0
+ ip helper-address 10.20.80.10
+ no shutdown
+
+interface Vlan70
+ description Gateway for Guest Wi-Fi VLAN 70
+ ip address 10.20.72.1 255.255.252.0
+ ip helper-address 10.20.80.10
+ no shutdown
+
+interface Vlan80
+ description Gateway for Internal DC Servers VLAN 80
+ ip address 10.20.80.1 255.255.255.0
+ no shutdown
+
+interface Vlan90
+ description Gateway for Printers and IoT VLAN 90
+ ip address 10.20.90.1 255.255.255.0
+ ip helper-address 10.20.80.10
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Trunk Links to Access Switches (Building 1, Building 2, Building 3)
+! Note: Catalyst 3560 requires 'switchport trunk encapsulation dot1q'
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/1
+ description Trunk Uplink to Access Switch A (Building 1 - HR & Finance)
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,80
+ no shutdown
+
+interface GigabitEthernet0/2
+ description Trunk Uplink to Access Switch B (Building 2 - R&D & Production)
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,40,50,80
+ no shutdown
+
+interface GigabitEthernet0/3
+ description Trunk Uplink to Access Switch C (Building 3 - Staff & DC)
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,60,70,80,90
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Routed Transit Link to Perimeter Firewall / Edge Router
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/24
+ description Point-to-Point Transit Link to Firewall / Edge Router
+ no switchport
+ ip address 10.20.254.2 255.255.255.252
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Default Route (Gateway of Last Resort via Firewall 10.20.254.1)
+! -----------------------------------------------------------------------------
+ip route 0.0.0.0 0.0.0.0 10.20.254.1
+
+! -----------------------------------------------------------------------------
+! Security Access Control Lists (ACLs) - Industrial & Guest Isolation
+! -----------------------------------------------------------------------------
+ip access-list extended BLOCK_GUEST_TO_INTERNAL
+ remark Deny Guest Wi-Fi (10.20.72.0/22) access to Data Center (10.20.80.0/24)
+ deny ip 10.20.72.0 0.0.3.255 10.20.80.0 0.0.0.255
+ permit ip any any
+
+ip access-list extended BLOCK_OT_TO_CORP
+ remark Prevent shopfloor SCADA (10.20.50.0/24) from reaching Corporate (10.20.60.0/23)
+ deny ip 10.20.50.0 0.0.0.255 10.20.60.0 0.0.1.255
+ permit ip any any
+
+interface Vlan70
+ ip access-group BLOCK_GUEST_TO_INTERNAL in
+
+interface Vlan50
+ ip access-group BLOCK_OT_TO_CORP in
+
+end
+write memory

@@ -1,0 +1,128 @@
+! ==============================================================================
+! CISCO PACKET TRACER CONFIGURATION SCRIPT
+! DEVICE: ACCESS SWITCH C (Catalyst 2960-24TT) - BUILDING 3
+! ROLE: Serving Corporate Staff (VLAN 60), Guest AP (VLAN 70), DC Servers (VLAN 80), IoT (VLAN 90)
+! ==============================================================================
+!
+! INSTRUCTIONS:
+! 1. In Packet Tracer, click on Access Switch C (Catalyst 2960).
+! 2. Click on the "CLI" tab.
+! 3. Type "enable" and press Enter.
+! 4. Type "configure terminal" and press Enter.
+! 5. Copy ALL lines below and click the "Paste" button on the bottom-right of the CLI window.
+! ==============================================================================
+
+hostname ACC-SW-C
+
+! -----------------------------------------------------------------------------
+! VLAN Database Provisioning
+! -----------------------------------------------------------------------------
+vlan 10
+ name Management
+vlan 60
+ name Corporate_Staff
+vlan 70
+ name Guest_WiFi
+vlan 80
+ name DC_Servers
+vlan 90
+ name Printers_IoT
+exit
+
+! -----------------------------------------------------------------------------
+! Trunk Uplink to Core Switch
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/1
+ description 802.1Q Trunk Uplink to Core Switch Gi0/3
+ switchport mode trunk
+ switchport trunk allowed vlan 10,60,70,80,90
+ switchport trunk native vlan 1
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 60 (Corporate Staff)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/1
+ description STAFF-LAPTOP-01 (Marketing Manager Laptop - 10.20.60.10)
+ switchport mode access
+ switchport access vlan 60
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/2
+ description STAFF-DESKTOP-02 (Sales Executive Workstation - 10.20.60.11)
+ switchport mode access
+ switchport access vlan 60
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 70 (Guest Wi-Fi Access Point)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/3
+ description AP-GUEST-01 (Cisco Aironet AP - 10.20.72.10)
+ switchport mode access
+ switchport access vlan 70
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 80 (Internal Data Center Servers)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/4
+ description SRV-DC-DHCP (Active Directory Domain Controller & DHCP - 10.20.80.10)
+ switchport mode access
+ switchport access vlan 80
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/5
+ description SRV-DNS-AUTH (Enterprise BIND9 Authoritative DNS - 10.20.80.11)
+ switchport mode access
+ switchport access vlan 80
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/6
+ description SRV-ERP-INTERNAL (SAP S/4HANA Database Server - 10.20.80.12)
+ switchport mode access
+ switchport access vlan 80
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 90 (Printers & Facilities IoT)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/7
+ description PRINT-FLOOR1 (Department Secure MFP Laser Printer - 10.20.90.10)
+ switchport mode access
+ switchport access vlan 90
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/8
+ description IOT-SENSOR-HUB (HVAC & Environmental Telemetry - 10.20.90.11)
+ switchport mode access
+ switchport access vlan 90
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Switchport Security Hardening: Administratively Disable Unused Ports
+! -----------------------------------------------------------------------------
+interface range FastEthernet0/9 - 24, GigabitEthernet0/2
+ description Unused Ports Disabled for Physical Security
+ shutdown
+
+! -----------------------------------------------------------------------------
+! Switch Management IP Address (VLAN 10)
+! -----------------------------------------------------------------------------
+interface Vlan10
+ description Management SVI
+ ip address 10.20.10.4 255.255.255.192
+ no shutdown
+
+ip default-gateway 10.20.10.1
+
+end
+write memory

@@ -1,0 +1,66 @@
+! ==============================================================================
+! CISCO PACKET TRACER CONFIGURATION SCRIPT
+! DEVICE: EDGE PERIMETER ROUTER (Cisco 2911 or 2901 Router) / FIREWALL
+! ROLE: Perimeter Gateway, NAT Overload (PAT), DMZ Gateway, and Return Routing
+! ==============================================================================
+!
+! INSTRUCTIONS:
+! 1. In Packet Tracer, click on the Edge Router (Cisco 2911 or 2901).
+! 2. Click on the "CLI" tab.
+! 3. If asked "Would you like to enter the initial configuration dialog? [yes/no]:", type "no" and press Enter.
+! 4. Type "enable" and press Enter.
+! 5. Type "configure terminal" and press Enter.
+! 6. Copy ALL lines below and click the "Paste" button on the bottom-right of the CLI window.
+! ==============================================================================
+
+hostname EDGE-ROUTER-01
+
+! -----------------------------------------------------------------------------
+! Interface GigabitEthernet0/0: Internal Transit Link to Core Switch
+! Connect cable to Core Switch GigabitEthernet0/24
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/0
+ description Point-to-Point Transit Link to CORE-SW-01 Gi0/24
+ ip address 10.20.254.1 255.255.255.252
+ ip nat inside
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Interface GigabitEthernet0/1: Outside Public WAN / Internet Egress
+! Connect cable to ISP Cloud / ISP Router
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/1
+ description Outside Public WAN Link to ISP
+ ip address 198.51.100.2 255.255.255.252
+ ip nat outside
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Interface GigabitEthernet0/2: DMZ Public Server Segment (VLAN 100)
+! Connect cable to DMZ Switch / DMZ Server
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/2
+ description DMZ Public Services Segment (VLAN 100)
+ ip address 10.20.100.1 255.255.255.224
+ ip nat inside
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Return Route back to Internal Enterprise Campus (via Core Switch 10.20.254.2)
+! -----------------------------------------------------------------------------
+ip route 10.20.0.0 255.255.0.0 10.20.254.2
+
+! -----------------------------------------------------------------------------
+! Default Route to Internet Service Provider (via ISP Gateway 198.51.100.1)
+! -----------------------------------------------------------------------------
+ip route 0.0.0.0 0.0.0.0 198.51.100.1
+
+! -----------------------------------------------------------------------------
+! Dynamic PAT (NAT Overload) Configuration
+! Translates all private 10.20.0.0/16 IPs to public IP 198.51.100.2
+! -----------------------------------------------------------------------------
+access-list 1 permit 10.20.0.0 0.0.255.255
+ip nat inside source list 1 interface GigabitEthernet0/1 overload
+
+end
+write memory

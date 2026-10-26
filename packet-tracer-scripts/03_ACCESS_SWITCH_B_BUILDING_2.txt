@@ -1,0 +1,100 @@
+! ==============================================================================
+! CISCO PACKET TRACER CONFIGURATION SCRIPT
+! DEVICE: ACCESS SWITCH B (Catalyst 2960-24TT) - BUILDING 2
+! ROLE: Serving Engineering / R&D (VLAN 40) and Production / OT SCADA (VLAN 50)
+! ==============================================================================
+!
+! INSTRUCTIONS:
+! 1. In Packet Tracer, click on Access Switch B (Catalyst 2960).
+! 2. Click on the "CLI" tab.
+! 3. Type "enable" and press Enter.
+! 4. Type "configure terminal" and press Enter.
+! 5. Copy ALL lines below and click the "Paste" button on the bottom-right of the CLI window.
+! ==============================================================================
+
+hostname ACC-SW-B
+
+! -----------------------------------------------------------------------------
+! VLAN Database Provisioning
+! -----------------------------------------------------------------------------
+vlan 10
+ name Management
+vlan 40
+ name Engineering_R_D
+vlan 50
+ name Production_OT
+exit
+
+! -----------------------------------------------------------------------------
+! Trunk Uplink to Core Switch
+! -----------------------------------------------------------------------------
+interface GigabitEthernet0/1
+ description 802.1Q Trunk Uplink to Core Switch Gi0/2
+ switchport mode trunk
+ switchport trunk allowed vlan 10,40,50,80
+ switchport trunk native vlan 1
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 10 (Network Management)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/1
+ description IT Field Tech Laptop (VLAN 10)
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 40 (Engineering & R&D Department)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/2
+ description ENG-CAD-01 (Lead Hardware Designer Workstation - 10.20.40.10)
+ switchport mode access
+ switchport access vlan 40
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/3
+ description ENG-DEV-02 (Firmware Developer PC - 10.20.40.11)
+ switchport mode access
+ switchport access vlan 40
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Access Ports: VLAN 50 (Production / Industrial OT / SCADA)
+! -----------------------------------------------------------------------------
+interface FastEthernet0/4
+ description PROD-SCADA-01 (Assembly Line HMI Console - 10.20.50.10)
+ switchport mode access
+ switchport access vlan 50
+ spanning-tree portfast
+ no shutdown
+
+interface FastEthernet0/5
+ description PROD-PLC-02 (Robotics Automation Controller - 10.20.50.11)
+ switchport mode access
+ switchport access vlan 50
+ spanning-tree portfast
+ no shutdown
+
+! -----------------------------------------------------------------------------
+! Switchport Security Hardening: Administratively Disable Unused Ports
+! -----------------------------------------------------------------------------
+interface range FastEthernet0/6 - 24, GigabitEthernet0/2
+ description Unused Ports Disabled for Physical Security
+ shutdown
+
+! -----------------------------------------------------------------------------
+! Switch Management IP Address (VLAN 10)
+! -----------------------------------------------------------------------------
+interface Vlan10
+ description Management SVI
+ ip address 10.20.10.3 255.255.255.192
+ no shutdown
+
+ip default-gateway 10.20.10.1
+
+end
+write memory
