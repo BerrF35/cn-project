@@ -749,23 +749,72 @@ export function simulateTraffic(
                   let isBlockedByPolicy = false;
                   let blockingReason = '';
 
-                  // Look up target VLAN
+                  // Look up target destination VLAN
                   const dstVlanDef = state.vlans.find(v => {
                     const parts = v.subnet.split('/');
                     return isIpInSubnet(targetIp, parts[0], parseInt(parts[1], 10));
                   });
                   const dstVlanId = dstVlanDef ? dstVlanDef.id : (dstDev?.interfaces[0]?.accessVlan || 80);
 
-                  // Check guest isolation
-                  if (srcVlan === 70 && targetIp.startsWith('10.20.80.')) {
-                    isBlockedByPolicy = true;
-                    blockingReason = 'ACL "BLOCK_GUEST_TO_INTERNAL": Deny Guest Wi-Fi (10.20.72.0/22) to Internal Servers (10.20.80.0/24)';
+                  // =========================================================================
+                  // Authoritative Policy-Based Inter-VLAN Security Matrix
+                  // =========================================================================
+
+                  // Rule 1: Zero-Trust Guest Isolation
+                  // Guests (VLAN 70) cannot access ANY internal enterprise departments or data center servers
+                  if (srcVlan === 70) {
+                    const isInternal = targetIp.startsWith('10.20.') || [10, 20, 30, 40, 50, 60, 80, 90].includes(dstVlanId);
+                    if (isInternal) {
+                      isBlockedByPolicy = true;
+                      blockingReason = 'ACL 170 ZERO-TRUST DENY: Guest Wi-Fi (VLAN 70) is strictly blocked from all internal enterprise departments & data center servers';
+                    }
                   }
-                  // Check OT SCADA isolation (bidirectional between SCADA and HR/Fin/Corp/Guest)
-                  if ((srcVlan === 50 && [20, 30, 60, 70].includes(dstVlanId)) ||
-                      (dstVlanId === 50 && [20, 30, 60, 70].includes(srcVlan))) {
+
+                  // Rule 2: HR Security Policy (VLAN 20)
+                  // HR can access designated HR services (Active Directory / HR Portal dev-srv-dc 10.20.80.10, DNS dev-srv-dns 10.20.80.11, default gateway, and internet)
+                  // BUT is denied direct access to Accounting/ERP Database (dev-srv-erp 10.20.80.12) and Production PLCs (VLAN 50)
+                  if (srcVlan === 20) {
+                    if (targetIp === '10.20.80.12' || dstDev?.id === 'dev-srv-erp') {
+                      isBlockedByPolicy = true;
+                      blockingReason = 'ACL 120 POLICY DENY: HR Department (VLAN 20) is restricted from direct access to Accounting/ERP Database (10.20.80.12). HR can only access designated HR Portal (10.20.80.10)';
+                    } else if (dstVlanId === 50 || dstDev?.id?.startsWith('dev-prod-')) {
+                      isBlockedByPolicy = true;
+                      blockingReason = 'ACL 120 POLICY DENY: HR Department (VLAN 20) is prohibited from accessing Industrial Production PLCs (VLAN 50)';
+                    }
+                  }
+
+                  // Rule 3: Finance Security Policy (VLAN 30)
+                  // Finance can access approved accounting services (ERP & Accounting DB dev-srv-erp 10.20.80.12, DNS dev-srv-dns 10.20.80.11, gateway, and internet)
+                  // BUT is denied access to HR Personnel/Compensation records (dev-srv-dc 10.20.80.10) and Production PLCs (VLAN 50)
+                  if (srcVlan === 30) {
+                    if (targetIp === '10.20.80.10' || dstDev?.id === 'dev-srv-dc') {
+                      isBlockedByPolicy = true;
+                      blockingReason = 'ACL 130 POLICY DENY: Finance Department (VLAN 30) is restricted from confidential HR Personnel records (10.20.80.10). Finance must access approved Accounting ERP (10.20.80.12)';
+                    } else if (dstVlanId === 50 || dstDev?.id?.startsWith('dev-prod-')) {
+                      isBlockedByPolicy = true;
+                      blockingReason = 'ACL 130 POLICY DENY: Finance Department (VLAN 30) is prohibited from accessing Industrial Production PLCs (VLAN 50)';
+                    }
+                  }
+
+                  // Rule 4: Production OT (SCADA) Security Policy (VLAN 50)
+                  // Production devices can communicate ONLY with required operational services:
+                  // - Operational Historian & SCADA Hub (dev-iot-01 10.20.90.11 on VLAN 90)
+                  // - Intra-VLAN production controllers
+                  // Denied: general corporate departments (VLAN 20, 30, 60, 70), corporate servers (dev-srv-dc, dev-srv-erp), and direct public internet
+                  if (srcVlan === 50) {
+                    const isOperationalService = targetIp === '10.20.90.11' || dstDev?.id === 'dev-iot-01' || dstVlanId === 90;
+                    const isCoreGateway = core.svis?.some(s => s.ipAddress === targetIp);
+                    if (!isOperationalService && !isCoreGateway) {
+                      isBlockedByPolicy = true;
+                      blockingReason = 'ACL 150 OPERATIONAL POLICY DENY: Production OT (VLAN 50) is restricted to required operational services (VLAN 90 SCADA Historian) only';
+                    }
+                  }
+
+                  // Rule 5: Inbound protection for Production OT (VLAN 50)
+                  // Standard corporate departments cannot probe or initiate sessions to Production PLCs
+                  if (dstVlanId === 50 && [20, 30, 60, 70].includes(srcVlan)) {
                     isBlockedByPolicy = true;
-                    blockingReason = 'ACL 101 Deny: Inter-VLAN Traffic between Production OT SCADA (VLAN 50) and Standard Departments is isolated';
+                    blockingReason = 'ACL 150 INBOUND DENY: Corporate endpoints are prohibited from direct access to Industrial Production PLCs (VLAN 50)';
                   }
 
                   if (isBlockedByPolicy) {

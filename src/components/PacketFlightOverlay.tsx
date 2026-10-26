@@ -1,5 +1,5 @@
 // Packet Flight Animation Overlay for NetScope Topology
-// Animates a dynamic 3D-angled paper airplane / packet drone traveling across the exact network link path
+// Animates concurrent 3D-angled paper airplane drones traveling across the exact network link paths
 
 import React, { useEffect, useState, useRef } from 'react';
 import { SimulationTrace } from '../types/network';
@@ -25,17 +25,16 @@ export interface PacketFlight {
   trace: SimulationTrace;
   nodes: FlightPathNode[];
   isTwoWay?: boolean;
+  colorHex?: string;
+  label?: string;
 }
 
-interface PacketFlightOverlayProps {
-  flight: PacketFlight | null;
-  onFlightComplete: (success: boolean, summary: string) => void;
+interface SingleFlightDroneProps {
+  flight: PacketFlight;
+  onComplete: () => void;
 }
 
-export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
-  flight,
-  onFlightComplete
-}) => {
+const SingleFlightDrone: React.FC<SingleFlightDroneProps> = ({ flight, onComplete }) => {
   const [animState, setAnimState] = useState<{
     x: number;
     y: number;
@@ -67,9 +66,8 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
     const validForwardNodes = dropIndex >= 0 ? forwardNodes.slice(0, dropIndex + 1) : forwardNodes;
 
     const returnNodes = isTwoWay ? [...validForwardNodes].reverse() : [];
-    const totalLegs = isTwoWay ? 2 : 1;
     const hopDuration = 650; // ms per hop
-    const forwardDuration = (validForwardNodes.length - 1) * hopDuration;
+    const forwardDuration = Math.max(1, (validForwardNodes.length - 1)) * hopDuration;
     const returnDuration = isTwoWay ? (returnNodes.length - 1) * hopDuration : 0;
     const totalDuration = forwardDuration + (isTwoWay ? 400 + returnDuration : 0);
 
@@ -77,8 +75,7 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
 
     const animate = (now: number) => {
       const elapsed = now - (startTimeRef.current || now);
-      
-      // Determine if forward or return leg
+
       let currentNodes = validForwardNodes;
       let isReturn = false;
       let legElapsed = elapsed;
@@ -112,8 +109,8 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
       const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
 
       // Telemetry badge logic
-      let badge = 'Native Frame';
-      let badgeColor = '#38bdf8';
+      let badge = flight.label || 'Native Frame';
+      let badgeColor = flight.colorHex || '#38bdf8';
 
       if (isReturn) {
         badge = 'ICMP Echo Reply [ACK]';
@@ -122,14 +119,14 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
         badge = `BLOCKED: ${p1.dropReason || 'ACL Policy Denied'}`;
         badgeColor = '#ef4444';
       } else if (p0.isTrunk || p1.isTrunk) {
-        badge = `802.1Q Tagged (VID: ${p0.vlanId || 20})`;
+        badge = `802.1Q Trunk (VID: ${p0.vlanId || 20})`;
         badgeColor = '#a855f7';
       } else if (p1.deviceId.includes('core')) {
-        badge = 'Core L3 SVI: Decrement TTL, Rewrite MAC';
+        badge = 'Core L3 SVI: Route & Check ACL';
         badgeColor = '#f59e0b';
       } else {
-        badge = `Untagged Access (VLAN ${p0.vlanId || 20})`;
-        badgeColor = '#38bdf8';
+        badge = flight.label || `Access VLAN ${p0.vlanId || 20}`;
+        badgeColor = flight.colorHex || '#38bdf8';
       }
 
       setAnimState({
@@ -147,8 +144,7 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
       if (elapsed < totalDuration) {
         requestRef.current = requestAnimationFrame(animate);
       } else {
-        // Complete
-        onFlightComplete(isSuccess, flight.trace.summary);
+        onComplete();
       }
     };
 
@@ -157,12 +153,18 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [flight, onFlightComplete]);
+  }, [flight, onComplete]);
 
   if (!animState || !flight) return null;
 
+  const planeColor = animState.dropped 
+    ? '#dc2626' 
+    : animState.isReturn 
+    ? '#059669' 
+    : (flight.colorHex || '#0284c7');
+
   return (
-    <g id="packet-flight-layer" className="pointer-events-none select-none z-30">
+    <g id={`drone-${flight.id}`} className="pointer-events-none select-none z-30">
       {/* Pulse ring when passing over or arriving at a node */}
       {animState.pulseNode && (
         <circle
@@ -171,7 +173,7 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
           r="24"
           fill="none"
           stroke={animState.dropped ? '#ef4444' : '#10b981'}
-          strokeWidth="2"
+          strokeWidth="2.5"
           opacity="0.8"
         >
           <animate attributeName="r" values="18;34" dur="0.4s" fill="freeze" />
@@ -186,10 +188,10 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
           y1="0"
           x2="-4"
           y2="0"
-          stroke={animState.dropped ? '#ef4444' : animState.isReturn ? '#10b981' : '#38bdf8'}
+          stroke={planeColor}
           strokeWidth="3.5"
           strokeLinecap="round"
-          opacity="0.8"
+          opacity="0.85"
           strokeDasharray="4 2"
         />
         <line
@@ -200,7 +202,7 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
           stroke="#ffffff"
           strokeWidth="1.5"
           strokeLinecap="round"
-          opacity="0.9"
+          opacity="0.95"
         />
 
         {/* Paper Plane Silhouette (Crafted Origami Vector) */}
@@ -208,7 +210,7 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
           {/* Main Top Body */}
           <path
             d="M 14,0 L -12,-9 L -5,0 L -12,9 Z"
-            fill={animState.dropped ? '#dc2626' : animState.isReturn ? '#059669' : '#0284c7'}
+            fill={planeColor}
             stroke="#ffffff"
             strokeWidth="1.2"
             strokeLinejoin="round"
@@ -226,13 +228,12 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
             fill="rgba(0,0,0,0.25)"
           />
           {/* Nose Photon Beacon */}
-          <circle cx="14" cy="0" r="1.8" fill="#ffffff" />
+          <circle cx="14" cy="0" r="2" fill="#ffffff" />
         </g>
       </g>
 
       {/* Floating Wire Telemetry Badge above the paper airplane */}
       <g transform={`translate(${animState.x}, ${animState.y - 24})`}>
-        {/* Drop shadow */}
         <rect
           x="-95"
           y="-13"
@@ -256,6 +257,30 @@ export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
           {animState.badgeText}
         </text>
       </g>
+    </g>
+  );
+};
+
+interface PacketFlightOverlayProps {
+  flights: PacketFlight[];
+  onFlightComplete: (flightId: string, success: boolean, summary: string) => void;
+}
+
+export const PacketFlightOverlay: React.FC<PacketFlightOverlayProps> = ({
+  flights,
+  onFlightComplete
+}) => {
+  if (!flights || flights.length === 0) return null;
+
+  return (
+    <g id="packet-flight-layer" className="pointer-events-none select-none z-30">
+      {flights.map(flight => (
+        <SingleFlightDrone
+          key={flight.id}
+          flight={flight}
+          onComplete={() => onFlightComplete(flight.id, flight.trace.success, flight.trace.summary)}
+        />
+      ))}
     </g>
   );
 };

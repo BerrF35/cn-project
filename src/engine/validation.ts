@@ -422,6 +422,156 @@ export const VALIDATION_TEST_SUITE: TestCaseDefinition[] = [
         traceId: trace.id
       };
     }
+  },
+  {
+    id: 'TEST-15',
+    title: 'Policy: HR Access to Designated HR Services Portal',
+    description: 'Permit HR (VLAN 20) access to designated Active Directory & HR Portal (10.20.80.10).',
+    category: 'SECURITY_POLICY',
+    expectedOutcome: 'PERMIT',
+    run: (state) => {
+      const { trace } = simulateTraffic(state, {
+        protocol: 'HTTP_GET',
+        sourceDeviceId: 'dev-hr-01',
+        destinationDeviceId: 'dev-srv-dc',
+        targetPort: 80
+      });
+      const passed = trace.success;
+      return {
+        id: 'TEST-15',
+        title: 'Policy: HR Access to Designated HR Portal',
+        description: 'Verify HR department can access designated HR & personnel management services.',
+        category: 'SECURITY_POLICY',
+        expectedOutcome: 'PERMIT',
+        actualOutcome: trace.success ? 'PERMIT' : 'DENY',
+        passed,
+        sourceDevice: 'HR-PC-01 (VLAN 20)',
+        destinationDevice: 'SRV-DC-DHCP (VLAN 80)',
+        protocol: 'HTTP_GET',
+        evidence: trace.summary,
+        traceId: trace.id
+      };
+    }
+  },
+  {
+    id: 'TEST-16',
+    title: 'Policy: HR Restricted from Direct Accounting ERP Access',
+    description: 'Enforce strict policy: HR (VLAN 20) MUST BE BLOCKED from direct access to Accounting/ERP Database (10.20.80.12).',
+    category: 'SECURITY_POLICY',
+    expectedOutcome: 'DENY',
+    run: (state) => {
+      const { trace } = simulateTraffic(state, {
+        protocol: 'TCP_SYN',
+        sourceDeviceId: 'dev-hr-01',
+        destinationDeviceId: 'dev-srv-erp',
+        targetPort: 443
+      });
+      const passed = !trace.success;
+      return {
+        id: 'TEST-16',
+        title: 'Policy: HR Isolation from Accounting ERP Database',
+        description: 'Enforce principle of least privilege: HR cannot access general financial ledgers.',
+        category: 'SECURITY_POLICY',
+        expectedOutcome: 'DENY',
+        actualOutcome: trace.success ? 'PERMIT' : 'DENY',
+        passed,
+        sourceDevice: 'HR-PC-01 (VLAN 20)',
+        destinationDevice: 'SRV-ERP-INTERNAL (VLAN 80)',
+        protocol: 'TCP_SYN',
+        evidence: trace.summary,
+        traceId: trace.id
+      };
+    }
+  },
+  {
+    id: 'TEST-17',
+    title: 'Policy: Finance Access to Approved Accounting Services',
+    description: 'Permit Finance (VLAN 30) access to approved SAP ERP & Accounting Database (10.20.80.12).',
+    category: 'SECURITY_POLICY',
+    expectedOutcome: 'PERMIT',
+    run: (state) => {
+      const { trace } = simulateTraffic(state, {
+        protocol: 'HTTP_GET',
+        sourceDeviceId: 'dev-fin-01',
+        destinationDeviceId: 'dev-srv-erp',
+        targetPort: 443
+      });
+      const passed = trace.success;
+      return {
+        id: 'TEST-17',
+        title: 'Policy: Finance Access to Approved ERP Accounting',
+        description: 'Verify Finance department can access approved corporate accounting database.',
+        category: 'SECURITY_POLICY',
+        expectedOutcome: 'PERMIT',
+        actualOutcome: trace.success ? 'PERMIT' : 'DENY',
+        passed,
+        sourceDevice: 'FIN-PC-01 (VLAN 30)',
+        destinationDevice: 'SRV-ERP-INTERNAL (VLAN 80)',
+        protocol: 'HTTP_GET',
+        evidence: trace.summary,
+        traceId: trace.id
+      };
+    }
+  },
+  {
+    id: 'TEST-18',
+    title: 'Policy: Finance Restricted from HR Personnel Server',
+    description: 'Enforce strict policy: Finance (VLAN 30) MUST BE BLOCKED from confidential HR Personnel records (10.20.80.10).',
+    category: 'SECURITY_POLICY',
+    expectedOutcome: 'DENY',
+    run: (state) => {
+      const { trace } = simulateTraffic(state, {
+        protocol: 'TCP_SYN',
+        sourceDeviceId: 'dev-fin-01',
+        destinationDeviceId: 'dev-srv-dc',
+        targetPort: 80
+      });
+      const passed = !trace.success;
+      return {
+        id: 'TEST-18',
+        title: 'Policy: Finance Restricted from HR Records',
+        description: 'Enforce strict department boundaries: Finance cannot access HR personnel records.',
+        category: 'SECURITY_POLICY',
+        expectedOutcome: 'DENY',
+        actualOutcome: trace.success ? 'PERMIT' : 'DENY',
+        passed,
+        sourceDevice: 'FIN-PC-01 (VLAN 30)',
+        destinationDevice: 'SRV-DC-DHCP (VLAN 80)',
+        protocol: 'TCP_SYN',
+        evidence: trace.summary,
+        traceId: trace.id
+      };
+    }
+  },
+  {
+    id: 'TEST-19',
+    title: 'Policy: Production OT Access to Required Operational Services',
+    description: 'Permit Production PLCs (VLAN 50) access ONLY to required operational telemetry services (VLAN 90 SCADA Historian).',
+    category: 'SECURITY_POLICY',
+    expectedOutcome: 'PERMIT',
+    run: (state) => {
+      const { trace } = simulateTraffic(state, {
+        protocol: 'TCP_SYN',
+        sourceDeviceId: 'dev-prod-01',
+        destinationDeviceId: 'dev-iot-01',
+        targetPort: 502
+      });
+      const passed = trace.success;
+      return {
+        id: 'TEST-19',
+        title: 'Policy: Production OT to Operational Services',
+        description: 'Verify shop-floor PLCs can reach required operational telemetry hub (10.20.90.11).',
+        category: 'SECURITY_POLICY',
+        expectedOutcome: 'PERMIT',
+        actualOutcome: trace.success ? 'PERMIT' : 'DENY',
+        passed,
+        sourceDevice: 'PROD-SCADA-01 (VLAN 50)',
+        destinationDevice: 'IOT-SENSOR-HUB (VLAN 90)',
+        protocol: 'TCP_SYN',
+        evidence: trace.summary,
+        traceId: trace.id
+      };
+    }
   }
 ];
 

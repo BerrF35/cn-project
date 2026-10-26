@@ -45,6 +45,7 @@ export const PresentationModal: React.FC = () => {
       actionLabel: 'Navigate to Topology Workspace',
       executeAction: () => {
         setActiveWorkspace('topology');
+        setShowPresentationMode(false);
         setDemoStatus('Switched to Topology Canvas. Click any device to inspect its CAM table, SVIs, or ARP cache.');
       }
     },
@@ -56,6 +57,7 @@ export const PresentationModal: React.FC = () => {
       narrative: `How does an enterprise switch actually forward packets in silicon? Switches do not execute generic software loops; they use specialized ASICs. An incoming frame enters the PHY SerDes buffer, where the 802.1Q parser validates the 4-byte VLAN tag (TPID 0x8100, 3-bit CoS, 12-bit VID). A hardware TCAM/CAM lookup resolves the destination MAC address in a single sub-150ns clock cycle. Frames traverse a non-blocking terabit crossbar switch fabric, and egress engines strip or insert tags depending on port mode.`,
       actionLabel: 'Inspect Switch Silicon Anatomy',
       executeAction: () => {
+        setShowPresentationMode(false);
         setShowAnatomyModal(true);
         setDemoStatus('Opened Hardware Anatomy Inspector. Walk the evaluator through the 6 ASIC forwarding stages!');
       }
@@ -69,6 +71,7 @@ export const PresentationModal: React.FC = () => {
       actionLabel: 'Run Live Broadcast Comparison',
       executeAction: () => {
         setActiveWorkspace('validation');
+        setShowPresentationMode(false);
         setDemoStatus('Switched to Validation Workspace. Scroll down to inspect the Flat vs Segmented Comparative Benchmark!');
       }
     },
@@ -77,16 +80,17 @@ export const PresentationModal: React.FC = () => {
       badge: 'Step 4: Inter-VLAN Routing & L2 Rewrite',
       title: 'Cross-VLAN Wire-Speed Routing & Header Dissection',
       icon: Activity,
-      narrative: `When HR-PC-01 (10.20.20.10) sends traffic to ERP Server (10.20.80.12), the host detects that the destination is outside its local subnet mask and addresses the Layer 2 frame to its Default Gateway MAC (Core SVI). Access Switch A tags the frame with VID 20 across the 802.1Q trunk. Core Switch 3850 terminates Layer 2 encapsulation, decrements the IPv4 TTL, updates the checksum, checks route tables and ACLs, rewrites the Layer 2 source MAC to Core SVI and destination MAC to ERP Server, and forwards onto VLAN 80.`,
-      actionLabel: 'Execute Live Cross-VLAN Simulation',
+      narrative: `When HR-PC-01 (10.20.20.10) sends traffic to designated HR Portal Server (10.20.80.10), the host addresses the Layer 2 frame to its Default Gateway MAC (Core SVI). Access Switch A tags the frame with VID 20 across the 802.1Q trunk. Core Switch 3850 terminates Layer 2 encapsulation, decrements the IPv4 TTL, updates the checksum, checks policy ACLs, rewrites the Layer 2 source MAC to Core SVI and destination MAC to HR Portal Server, and forwards onto VLAN 80.`,
+      actionLabel: 'Execute Live Cross-VLAN Simulation & View on Topology',
       executeAction: () => {
-        setActiveWorkspace('traffic');
+        setActiveWorkspace('topology');
+        setShowPresentationMode(false);
         const trace = runSimulation({
           protocol: 'ICMP_PING',
           sourceDeviceId: 'dev-hr-01',
-          destinationDeviceId: 'dev-srv-erp'
+          destinationDeviceId: 'dev-srv-dc'
         });
-        setDemoStatus(`Simulated Cross-VLAN Ping: ${trace.summary} (${trace.packetStats.totalHops} hops, ${trace.packetStats.l2Rewrites} L2 rewrites)`);
+        setDemoStatus(`Simulated Cross-VLAN Ping: ${trace.summary}`);
       }
     },
     {
@@ -95,9 +99,10 @@ export const PresentationModal: React.FC = () => {
       title: 'Perimeter Stateful Inspection & Internet Connectivity',
       icon: ShieldCheck,
       narrative: `To access public resources (like 8.8.8.8) or DMZ web services, packets route through the Point-to-Point Transit link 10.20.254.0/30 to the Cisco ASA 5516-X. The firewall inspects connection state, applies access-list policies, and performs Dynamic Port Address Translation (PAT), substituting the internal private IP with public interface IP 198.51.100.2. Return traffic is verified against the stateful flow table and demultiplexed safely back to the original host.`,
-      actionLabel: 'Simulate Outbound Internet Flow',
+      actionLabel: 'Simulate Outbound Internet Flow & View on Topology',
       executeAction: () => {
-        setActiveWorkspace('traffic');
+        setActiveWorkspace('topology');
+        setShowPresentationMode(false);
         const trace = runSimulation({
           protocol: 'ICMP_PING',
           sourceDeviceId: 'dev-hr-01',
@@ -115,6 +120,7 @@ export const PresentationModal: React.FC = () => {
       actionLabel: 'Inject Fault & Open Fault Lab',
       executeAction: () => {
         setActiveWorkspace('faults');
+        setShowPresentationMode(false);
         injectFault('fault-trunk-prune');
         setDemoStatus('Injected Fault: "VLAN 40 Pruned from Trunk Gi0/1". Observe test failure and click "1-Click Interactive Repair" to restore!');
       }
@@ -124,12 +130,13 @@ export const PresentationModal: React.FC = () => {
       badge: 'Step 7: Automated Compliance Suite & Report Export',
       title: 'Automated Test Oracle & Complete Technical Deliverables',
       icon: FileText,
-      narrative: `NetScope provides a 14-test automated validation suite checking intra-VLAN switching, cross-VLAN routing, zero-trust guest isolation, OT boundary protection, DHCP relay, DNS resolution, and switchport security hardening. All test results, topology models, Cisco running-configurations, and packet traces can be exported as printable HTML engineering reports, Markdown summaries, vector SVGs, and CSVs.`,
+      narrative: `NetScope provides a 19-test automated validation suite checking intra-VLAN switching, cross-VLAN routing, policy-based HR/Finance/Guest/Production access control, DHCP relay, DNS resolution, and switchport security hardening. All test results, topology models, Cisco running-configurations, and packet traces can be exported as printable HTML engineering reports, Markdown summaries, vector SVGs, and CSVs.`,
       actionLabel: 'Run Entire Validation Suite',
       executeAction: () => {
         setActiveWorkspace('validation');
+        setShowPresentationMode(false);
         runAllValidationTests();
-        setDemoStatus('Executed all 14 automated compliance tests. You can now download the Printable HTML Engineering Report!');
+        setDemoStatus('Executed all automated compliance tests. You can now download the Printable HTML Engineering Report!');
       }
     }
   ];

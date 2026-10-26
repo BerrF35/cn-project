@@ -121,11 +121,11 @@ test('Flight Path Integrity: HR-PC-01 to ENG-CAD-01 traverses Switch A -> Core -
   ]);
 });
 
-test('Flight Path Integrity: HR-PC-01 to SRV-ERP-INTERNAL traverses Switch A -> Core -> Switch C -> Server', () => {
+test('Flight Path Integrity: HR-PC-01 to designated HR Portal (dev-srv-dc) traverses Switch A -> Core -> Switch C -> Server', () => {
   const { trace } = simulateTraffic(INITIAL_NETWORK_STATE, {
     protocol: 'ICMP_PING',
     sourceDeviceId: 'dev-hr-01',
-    destinationDeviceId: 'dev-srv-erp'
+    destinationDeviceId: 'dev-srv-dc'
   });
 
   const path = buildStrictPath(INITIAL_NETWORK_STATE, trace, 'dev-hr-01');
@@ -143,7 +143,50 @@ test('Flight Path Integrity: HR-PC-01 to SRV-ERP-INTERNAL traverses Switch A -> 
     'dev-acc-sw-a',
     'dev-core-01',
     'dev-acc-sw-c',
+    'dev-srv-dc'
+  ]);
+});
+
+test('Flight Path Integrity: FIN-PC-01 to approved accounting ERP (dev-srv-erp) traverses Switch A -> Core -> Switch C -> Server', () => {
+  const { trace } = simulateTraffic(INITIAL_NETWORK_STATE, {
+    protocol: 'ICMP_PING',
+    sourceDeviceId: 'dev-fin-01',
+    destinationDeviceId: 'dev-srv-erp'
+  });
+
+  const path = buildStrictPath(INITIAL_NETWORK_STATE, trace, 'dev-fin-01');
+
+  for (let i = 0; i < path.length - 1; i++) {
+    assert.strictEqual(
+      hasDirectLink(INITIAL_NETWORK_STATE.links, path[i], path[i + 1]),
+      true,
+      `Hop ${path[i]} -> ${path[i + 1]} is missing a physical link!`
+    );
+  }
+
+  assert.deepStrictEqual(path, [
+    'dev-fin-01',
+    'dev-acc-sw-a',
+    'dev-core-01',
+    'dev-acc-sw-c',
     'dev-srv-erp'
+  ]);
+});
+
+test('Flight Path Integrity: HR-PC-01 to restricted Accounting ERP (dev-srv-erp) is blocked at Core and halts on Core', () => {
+  const { trace } = simulateTraffic(INITIAL_NETWORK_STATE, {
+    protocol: 'ICMP_PING',
+    sourceDeviceId: 'dev-hr-01',
+    destinationDeviceId: 'dev-srv-erp'
+  });
+
+  assert.strictEqual(trace.success, false, 'HR access to Accounting ERP should be denied by policy');
+
+  const path = buildStrictPath(INITIAL_NETWORK_STATE, trace, 'dev-hr-01');
+  assert.deepStrictEqual(path, [
+    'dev-hr-01',
+    'dev-acc-sw-a',
+    'dev-core-01'
   ]);
 });
 

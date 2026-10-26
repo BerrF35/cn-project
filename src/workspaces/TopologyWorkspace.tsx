@@ -23,6 +23,7 @@ import {
   Crosshair,
   CheckCircle2,
   AlertTriangle,
+  Zap,
   X,
   ExternalLink
 } from 'lucide-react';
@@ -57,8 +58,8 @@ export const TopologyWorkspace: React.FC = () => {
   // Canvas Target Selection State
   const [targetSelectSource, setTargetSelectSource] = useState<NetworkDevice | null>(null);
 
-  // Active Paper Airplane Packet Flight State
-  const [activeFlight, setActiveFlight] = useState<PacketFlight | null>(null);
+  // Active Paper Airplane Packet Flights State (Multiple simultaneous flights)
+  const [activeFlights, setActiveFlights] = useState<PacketFlight[]>([]);
 
   // Flight Completion Telemetry Notification
   const [flightNotification, setFlightNotification] = useState<{
@@ -120,7 +121,11 @@ export const TopologyWorkspace: React.FC = () => {
   }, []);
 
   // Trigger Packet Flight between two devices (STRICTLY ON NETWORK LINES)
-  const triggerPacketFlight = useCallback((source: NetworkDevice, target: NetworkDevice) => {
+  const triggerPacketFlight = useCallback((
+    source: NetworkDevice, 
+    target: NetworkDevice, 
+    options?: { label?: string; colorHex?: string }
+  ) => {
     setContextMenu(null);
     setTargetSelectSource(null);
 
@@ -207,36 +212,67 @@ export const TopologyWorkspace: React.FC = () => {
       });
     }
 
-    setActiveFlight({
-      id: `flight-${Date.now()}`,
+    const newFlight: PacketFlight = {
+      id: `flight-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       sourceDeviceId: source.id,
       destinationDeviceId: target.id,
       protocol: 'ICMP_PING',
       trace,
       nodes: flightNodes,
-      isTwoWay: trace.success
-    });
+      isTwoWay: trace.success,
+      colorHex: options?.colorHex,
+      label: options?.label
+    };
+
+    setActiveFlights(prev => [...prev.slice(-6), newFlight]);
   }, [runSimulation, state.devices, state.links, hasDirectLink, findLinkHopPath]);
 
   // Handle flight completion
-  const handleFlightComplete = useCallback((success: boolean, summary: string) => {
-    if (!activeFlight) return;
-    const sourceDev = state.devices.find(d => d.id === activeFlight.sourceDeviceId);
-    const targetDev = state.devices.find(d => d.id === activeFlight.destinationDeviceId);
+  const handleFlightComplete = useCallback((flightId: string, success: boolean, summary: string) => {
+    setActiveFlights(prev => {
+      const flight = prev.find(f => f.id === flightId);
+      if (flight) {
+        const sourceDev = state.devices.find(d => d.id === flight.sourceDeviceId);
+        const targetDev = state.devices.find(d => d.id === flight.destinationDeviceId);
 
-    setFlightNotification({
-      id: `notif-${Date.now()}`,
-      success,
-      summary,
-      sourceName: sourceDev?.hostname || 'Source Host',
-      targetName: targetDev?.hostname || 'Destination Host',
-      rtt: success ? `${(Math.random() * 2 + 1.2).toFixed(1)}ms` : 'Packet Dropped',
-      hops: Math.max(1, activeFlight.nodes.length - 1),
-      timestamp: new Date().toLocaleTimeString()
+        setFlightNotification({
+          id: `notif-${Date.now()}`,
+          success,
+          summary,
+          sourceName: sourceDev?.hostname || 'Source Host',
+          targetName: targetDev?.hostname || 'Destination Host',
+          rtt: success ? `${(Math.random() * 2 + 1.2).toFixed(1)}ms` : 'Packet Dropped',
+          hops: Math.max(1, flight.nodes.length - 1),
+          timestamp: new Date().toLocaleTimeString()
+        });
+      }
+      return prev.filter(f => f.id !== flightId);
     });
+  }, [state.devices]);
 
-    setActiveFlight(null);
-  }, [activeFlight, state.devices]);
+  // Multi-message simultaneous policy storm simulation
+  const simulateAllPoliciesSimultaneously = useCallback(() => {
+    const hr = state.devices.find(d => d.id === 'dev-hr-01');
+    const hrPortal = state.devices.find(d => d.id === 'dev-srv-dc');
+    const fin = state.devices.find(d => d.id === 'dev-fin-01');
+    const finErp = state.devices.find(d => d.id === 'dev-srv-erp');
+    const guest = state.devices.find(d => d.id === 'dev-guest-01');
+    const prod = state.devices.find(d => d.id === 'dev-prod-01');
+    const prodHist = state.devices.find(d => d.id === 'dev-iot-01');
+
+    if (hr && hrPortal) {
+      setTimeout(() => triggerPacketFlight(hr, hrPortal, { label: 'HR -> HR Portal [PERMIT]', colorHex: '#ec4899' }), 0);
+    }
+    if (fin && finErp) {
+      setTimeout(() => triggerPacketFlight(fin, finErp, { label: 'Finance -> ERP [PERMIT]', colorHex: '#10b981' }), 200);
+    }
+    if (guest && finErp) {
+      setTimeout(() => triggerPacketFlight(guest, finErp, { label: 'Guest -> Internal [BLOCKED]', colorHex: '#ef4444' }), 400);
+    }
+    if (prod && prodHist) {
+      setTimeout(() => triggerPacketFlight(prod, prodHist, { label: 'Production -> Historian [PERMIT]', colorHex: '#f59e0b' }), 600);
+    }
+  }, [state.devices, triggerPacketFlight]);
 
   // Right-click on department zone halo
   const handleDepartmentZoneContextMenu = (e: React.MouseEvent, defaultDeviceId: string) => {
@@ -358,10 +394,81 @@ export const TopologyWorkspace: React.FC = () => {
             </button>
           )}
 
-          {/* Quick hint for evaluation */}
-          <div className="hidden xl:flex items-center gap-1.5 pl-2 border-l border-[#334155] text-slate-400 text-xs">
-            <Send className="w-3.5 h-3.5 text-[#38bdf8]" />
-            <span>Right-click any node/department to simulate packet flight</span>
+          {/* Active flight count badge */}
+          {activeFlights.length > 0 && (
+            <div className="flex items-center gap-1.5 pl-2 border-l border-[#334155] text-emerald-400 font-mono text-xs animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>{activeFlights.length} {activeFlights.length === 1 ? 'Message' : 'Messages'} in Flight</span>
+            </div>
+          )}
+        </div>
+
+        {/* Policy-Based Inter-VLAN Security Multi-Flight Bar (Top Right) */}
+        <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5">
+          <div className="flex flex-wrap items-center gap-2 bg-[#0f172a]/95 backdrop-blur-md p-2 rounded-xl border border-indigo-500/40 shadow-2xl">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/50 text-[11px] font-bold text-indigo-300">
+              <Shield className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Policy Security Matrix</span>
+            </div>
+
+            {/* Simultaneous Multi-Message Storm Button */}
+            <button
+              onClick={simulateAllPoliciesSimultaneously}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg transition active:scale-95"
+              title="Launch 4 simultaneous messages across the network cables"
+            >
+              <Zap className="w-3.5 h-3.5 text-yellow-300 animate-bounce" />
+              <span>Simulate All 4 Simultaneously</span>
+            </button>
+
+            {/* Quick individual policy simulations */}
+            <button
+              onClick={() => {
+                const hr = state.devices.find(d => d.id === 'dev-hr-01');
+                const hrPortal = state.devices.find(d => d.id === 'dev-srv-dc');
+                if (hr && hrPortal) triggerPacketFlight(hr, hrPortal, { label: 'HR -> HR Portal [PERMIT]', colorHex: '#ec4899' });
+              }}
+              className="px-2.5 py-1 rounded-lg bg-[#1e293b] hover:bg-slate-800 border border-pink-500/40 text-pink-300 text-xs font-medium transition"
+              title="HR accessing designated HR Portal (VLAN 80)"
+            >
+              HR → HR Portal <span className="text-[10px] text-emerald-400 font-bold ml-0.5">ALLOW</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const fin = state.devices.find(d => d.id === 'dev-fin-01');
+                const finErp = state.devices.find(d => d.id === 'dev-srv-erp');
+                if (fin && finErp) triggerPacketFlight(fin, finErp, { label: 'Finance -> ERP [PERMIT]', colorHex: '#10b981' });
+              }}
+              className="px-2.5 py-1 rounded-lg bg-[#1e293b] hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 text-xs font-medium transition"
+              title="Finance accessing approved Accounting ERP (VLAN 80)"
+            >
+              Finance → ERP <span className="text-[10px] text-emerald-400 font-bold ml-0.5">ALLOW</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const guest = state.devices.find(d => d.id === 'dev-guest-01');
+                const finErp = state.devices.find(d => d.id === 'dev-srv-erp');
+                if (guest && finErp) triggerPacketFlight(guest, finErp, { label: 'Guest -> Internal [BLOCKED]', colorHex: '#ef4444' });
+              }}
+              className="px-2.5 py-1 rounded-lg bg-[#1e293b] hover:bg-slate-800 border border-rose-500/40 text-rose-300 text-xs font-medium transition"
+              title="Guest Wi-Fi probing Internal ERP Server (VLAN 80)"
+            >
+              Guest → Internal <span className="text-[10px] text-rose-400 font-bold ml-0.5">BLOCK</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const prod = state.devices.find(d => d.id === 'dev-prod-01');
+                const prodHist = state.devices.find(d => d.id === 'dev-iot-01');
+                if (prod && prodHist) triggerPacketFlight(prod, prodHist, { label: 'Prod -> SCADA Historian [PERMIT]', colorHex: '#f59e0b' });
+              }}
+              className="px-2.5 py-1 rounded-lg bg-[#1e293b] hover:bg-slate-800 border border-amber-500/40 text-amber-300 text-xs font-medium transition"
+              title="Production PLC accessing required Operational SCADA Historian (VLAN 90)"
+            >
+              Prod → Historian <span className="text-[10px] text-emerald-400 font-bold ml-0.5">ALLOW</span>
+            </button>
           </div>
         </div>
 
@@ -633,9 +740,9 @@ export const TopologyWorkspace: React.FC = () => {
               })}
             </g>
 
-            {/* Packet Flight Animation Layer (Paper Plane gliding along links) */}
+            {/* Packet Flight Animation Layer (Multiple Paper Planes gliding along links concurrently) */}
             <PacketFlightOverlay
-              flight={activeFlight}
+              flights={activeFlights}
               onFlightComplete={handleFlightComplete}
             />
           </svg>
