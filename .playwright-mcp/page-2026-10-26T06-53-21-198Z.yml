@@ -1,0 +1,234 @@
+- generic [ref=f15e3]:
+  - banner [ref=f15e4]:
+    - generic [ref=f15e5]:
+      - generic [ref=f15e10]:
+        - generic [ref=f15e11]:
+          - heading "NetScope v2.4" [level=1] [ref=f15e12]:
+            - text: NetScope
+            - generic [ref=f15e13]: v2.4
+          - generic [ref=f15e14]: 10-VLAN Enterprise
+        - paragraph [ref=f15e15]: Interactive Enterprise Network Engineering & Security Simulator
+      - navigation [ref=f15e16]:
+        - button "Topology" [active] [ref=f15e17]
+        - button "Traffic Lab" [ref=f15e24]
+        - button "Config Studio (CLI)" [ref=f15e28]
+        - button "Fault Lab" [ref=f15e32]
+        - button "Validation & Report 14/14" [ref=f15e36]:
+          - generic [ref=f15e40]: Validation & Report
+          - generic [ref=f15e41]: 14/14
+      - generic [ref=f15e42]:
+        - button "IP Planner" [ref=f15e43]
+        - button "Hardware Anatomy" [ref=f15e47]
+        - button "Present Demo" [ref=f15e52]
+        - button "Reset Network to Initial Baseline" [ref=f15e57]
+  - main [ref=f15e61]:
+    - generic [ref=f15e900]:
+      - generic [ref=f15e901]:
+        - generic [ref=f15e902]:
+          - generic [ref=f15e903]:
+            - button "Zoom In" [ref=f15e904]
+            - generic [ref=f15e908]: 100%
+            - button "Zoom Out" [ref=f15e909]
+            - button "Reset View" [ref=f15e913]
+          - generic [ref=f15e919]:
+            - generic [ref=f15e922]: "VLAN Filter:"
+            - combobox [ref=f15e923]:
+              - option "All VLANs (Show Full Topology)" [selected]
+              - 'option "VLAN 10: Network Management (10.20.10.0/26)"'
+              - 'option "VLAN 20: Human Resources (HR) (10.20.20.0/24)"'
+              - 'option "VLAN 30: Finance & Accounting (10.20.30.0/24)"'
+              - 'option "VLAN 40: Engineering & R&D (10.20.40.0/23)"'
+              - 'option "VLAN 50: Production & OT (SCADA) (10.20.50.0/24)"'
+              - 'option "VLAN 60: Corporate Staff (10.20.60.0/23)"'
+              - 'option "VLAN 70: Guest Wi-Fi (10.20.72.0/22)"'
+              - 'option "VLAN 80: Internal Data Center Servers (10.20.80.0/24)"'
+              - 'option "VLAN 90: Printers & IoT Peripherals (10.20.90.0/24)"'
+              - 'option "VLAN 100: DMZ Perimeter Services (10.20.100.0/27)"'
+        - generic [ref=f15e924]:
+          - generic [ref=f15e925]: Campus Hierarchy
+          - generic [ref=f15e926]: Point-to-Point Transit Link (10.20.254.0/30)
+          - generic [ref=f15e929]: 802.1Q Dot1q Trunk Uplink (Allowed VLANs)
+          - generic [ref=f15e932]: Access Switchport (Untagged Department Link)
+          - generic [ref=f15e935]: Disconnected / Down Interface
+        - img [ref=f15e939]:
+          - generic [ref=f15e941]:
+            - generic [ref=f15e943]: "BUILDING 1: HR & FINANCE"
+            - generic [ref=f15e945]: "BUILDING 2: ENGINEERING & OT"
+            - generic [ref=f15e947]: "BUILDING 3: DC & OPERATIONS"
+            - generic [ref=f15e949]: DMZ SECURE ZONE (VLAN 100)
+          - generic [ref=f15e950]:
+            - generic [ref=f15e951] [cursor=pointer]: TRUNK
+            - generic [ref=f15e956] [cursor=pointer]: TRUNK
+            - generic [ref=f15e961] [cursor=pointer]: TRUNK
+            - generic [ref=f15e966] [cursor=pointer]
+            - generic [ref=f15e968] [cursor=pointer]
+            - generic [ref=f15e970] [cursor=pointer]
+            - generic [ref=f15e972] [cursor=pointer]
+            - generic [ref=f15e974] [cursor=pointer]
+            - generic [ref=f15e976] [cursor=pointer]
+            - generic [ref=f15e978] [cursor=pointer]
+            - generic [ref=f15e980] [cursor=pointer]
+            - generic [ref=f15e982] [cursor=pointer]
+            - generic [ref=f15e984] [cursor=pointer]
+            - generic [ref=f15e986] [cursor=pointer]
+            - generic [ref=f15e988] [cursor=pointer]
+            - generic [ref=f15e990] [cursor=pointer]
+            - generic [ref=f15e992] [cursor=pointer]
+            - generic [ref=f15e994] [cursor=pointer]
+            - generic [ref=f15e996] [cursor=pointer]
+            - generic [ref=f15e998] [cursor=pointer]
+          - generic [ref=f15e1000]:
+            - generic [ref=f15e1001] [cursor=pointer]:
+              - generic [ref=f15e1006]: FW-EDGE-01
+              - generic [ref=f15e1007]: 198.51.100.2
+            - generic [ref=f15e1008] [cursor=pointer]:
+              - generic [ref=f15e1015]: CORE-SW-01
+              - generic [ref=f15e1016]: 10.20.254.2
+            - generic [ref=f15e1017] [cursor=pointer]:
+              - generic [ref=f15e1023]: ACC-SW-A
+              - generic [ref=f15e1024]: Catalyst
+            - generic [ref=f15e1025] [cursor=pointer]:
+              - generic [ref=f15e1031]: ACC-SW-B
+              - generic [ref=f15e1032]: Catalyst
+            - generic [ref=f15e1033] [cursor=pointer]:
+              - generic [ref=f15e1039]: ACC-SW-C
+              - generic [ref=f15e1040]: Catalyst
+            - generic [ref=f15e1041] [cursor=pointer]:
+              - generic [ref=f15e1047]: DMZ-SW-01
+              - generic [ref=f15e1048]: Catalyst
+            - generic [ref=f15e1049] [cursor=pointer]:
+              - generic [ref=f15e1054]: ISP-EDGE-RTR
+              - generic [ref=f15e1055]: 198.51.100.1
+            - generic [ref=f15e1056] [cursor=pointer]:
+              - generic [ref=f15e1062]: MGMT-WS-01
+              - generic [ref=f15e1063]: 10.20.10.10
+            - generic [ref=f15e1064] [cursor=pointer]:
+              - generic [ref=f15e1070]: HR-PC-01
+              - generic [ref=f15e1071]: 10.20.20.10
+            - generic [ref=f15e1072] [cursor=pointer]:
+              - generic [ref=f15e1078]: HR-PC-02
+              - generic [ref=f15e1079]: 10.20.20.11
+            - generic [ref=f15e1080] [cursor=pointer]:
+              - generic [ref=f15e1086]: FIN-PC-01
+              - generic [ref=f15e1087]: 10.20.30.10
+            - generic [ref=f15e1088] [cursor=pointer]:
+              - generic [ref=f15e1094]: FIN-PC-02
+              - generic [ref=f15e1095]: 10.20.30.11
+            - generic [ref=f15e1096] [cursor=pointer]:
+              - generic [ref=f15e1102]: ENG-CAD-01
+              - generic [ref=f15e1103]: 10.20.40.10
+            - generic [ref=f15e1104] [cursor=pointer]:
+              - generic [ref=f15e1110]: ENG-DEV-02
+              - generic [ref=f15e1111]: 10.20.40.11
+            - generic [ref=f15e1112] [cursor=pointer]:
+              - generic [ref=f15e1118]: PROD-SCADA-01
+              - generic [ref=f15e1119]: 10.20.50.10
+            - generic [ref=f15e1120] [cursor=pointer]:
+              - generic [ref=f15e1126]: PROD-PLC-02
+              - generic [ref=f15e1127]: 10.20.50.11
+            - generic [ref=f15e1128] [cursor=pointer]:
+              - generic [ref=f15e1133]: STAFF-LAPTOP-01
+              - generic [ref=f15e1134]: 10.20.60.10
+            - generic [ref=f15e1135] [cursor=pointer]:
+              - generic [ref=f15e1140]: STAFF-LAPTOP-02
+              - generic [ref=f15e1141]: 10.20.60.11
+            - generic [ref=f15e1142] [cursor=pointer]:
+              - generic [ref=f15e1151]: AP-GUEST-01
+              - generic [ref=f15e1152]: 10.20.72.2
+            - generic [ref=f15e1153] [cursor=pointer]:
+              - generic [ref=f15e1158]: GUEST-PHONE-01
+              - generic [ref=f15e1159]: 10.20.72.10
+            - generic [ref=f15e1160] [cursor=pointer]:
+              - generic [ref=f15e1166]: SRV-DC-DHCP
+              - generic [ref=f15e1167]: 10.20.80.10
+            - generic [ref=f15e1168] [cursor=pointer]:
+              - generic [ref=f15e1174]: SRV-DNS-AUTH
+              - generic [ref=f15e1175]: 10.20.80.11
+            - generic [ref=f15e1176] [cursor=pointer]:
+              - generic [ref=f15e1182]: SRV-ERP-INTERNAL
+              - generic [ref=f15e1183]: 10.20.80.12
+            - generic [ref=f15e1184] [cursor=pointer]:
+              - generic [ref=f15e1191]: PRINT-FLOOR1
+              - generic [ref=f15e1192]: 10.20.90.10
+            - generic [ref=f15e1193] [cursor=pointer]:
+              - generic [ref=f15e1199]: IOT-SENSOR-HUB
+              - generic [ref=f15e1200]: 10.20.90.11
+            - generic [ref=f15e1201] [cursor=pointer]:
+              - generic [ref=f15e1207]: DMZ-WEB-PUBLIC
+              - generic [ref=f15e1208]: 10.20.100.10
+            - generic [ref=f15e1209] [cursor=pointer]:
+              - generic [ref=f15e1215]: DMZ-VPN-GATEWAY
+              - generic [ref=f15e1216]: 10.20.100.11
+            - generic [ref=f15e1217] [cursor=pointer]:
+              - generic [ref=f15e1223]: EXT-DNS-ROOT
+              - generic [ref=f15e1224]: 8.8.8.8
+      - generic [ref=f15e1226]:
+        - generic [ref=f15e1227]:
+          - generic [ref=f15e1233]:
+            - generic [ref=f15e1234]:
+              - heading "CORE-SW-01" [level=3] [ref=f15e1235]
+              - generic [ref=f15e1236]: L3_CORE
+            - paragraph [ref=f15e1237]: Core L3 Switch (Catalyst 3850) • Building 1 - MDF Data Center
+          - generic [ref=f15e1238]:
+            - button "Anatomy" [ref=f15e1239]
+            - button [ref=f15e1244]
+        - generic [ref=f15e1248]:
+          - button "Interfaces (4)" [ref=f15e1249]
+          - button "MAC Table (7)" [ref=f15e1250]
+          - button "ARP Cache (8)" [ref=f15e1251]
+          - button "Routing Table (11)" [ref=f15e1252]
+          - button "Cisco Config" [ref=f15e1253]
+        - generic [ref=f15e1255]:
+          - generic [ref=f15e1256]:
+            - generic [ref=f15e1257]:
+              - generic [ref=f15e1258]:
+                - generic [ref=f15e1260]: GigabitEthernet1/0/24
+                - generic [ref=f15e1261]: ROUTED
+              - button "SHUTDOWN" [ref=f15e1262]
+            - generic [ref=f15e1263]:
+              - generic [ref=f15e1264]: "MAC: 00:1c:58:11:bb:24"
+              - generic [ref=f15e1265]:
+                - text: "Speed:"
+                - generic [ref=f15e1266]: 1000 Mbps
+              - generic [ref=f15e1267]: "IP: 10.20.254.2"
+              - generic [ref=f15e1268]: "Mask: 255.255.255.252"
+              - generic [ref=f15e1269]: "Connected to: dev-fw-01 (Gi1/2)"
+          - generic [ref=f15e1270]:
+            - generic [ref=f15e1271]:
+              - generic [ref=f15e1272]:
+                - generic [ref=f15e1274]: GigabitEthernet1/0/1
+                - generic [ref=f15e1275]: TRUNK
+              - button "SHUTDOWN" [ref=f15e1276]
+            - generic [ref=f15e1277]:
+              - generic [ref=f15e1278]: "MAC: 00:1c:58:11:bb:01"
+              - generic [ref=f15e1279]:
+                - text: "Speed:"
+                - generic [ref=f15e1280]: 1000 Mbps
+              - generic [ref=f15e1281]: "Allowed VLANs: 10, 20, 30, 80"
+              - generic [ref=f15e1282]: "Connected to: dev-acc-sw-a (Gi0/1)"
+          - generic [ref=f15e1283]:
+            - generic [ref=f15e1284]:
+              - generic [ref=f15e1285]:
+                - generic [ref=f15e1287]: GigabitEthernet1/0/2
+                - generic [ref=f15e1288]: TRUNK
+              - button "SHUTDOWN" [ref=f15e1289]
+            - generic [ref=f15e1290]:
+              - generic [ref=f15e1291]: "MAC: 00:1c:58:11:bb:02"
+              - generic [ref=f15e1292]:
+                - text: "Speed:"
+                - generic [ref=f15e1293]: 1000 Mbps
+              - generic [ref=f15e1294]: "Allowed VLANs: 10, 40, 50, 80"
+              - generic [ref=f15e1295]: "Connected to: dev-acc-sw-b (Gi0/1)"
+          - generic [ref=f15e1296]:
+            - generic [ref=f15e1297]:
+              - generic [ref=f15e1298]:
+                - generic [ref=f15e1300]: GigabitEthernet1/0/3
+                - generic [ref=f15e1301]: TRUNK
+              - button "SHUTDOWN" [ref=f15e1302]
+            - generic [ref=f15e1303]:
+              - generic [ref=f15e1304]: "MAC: 00:1c:58:11:bb:03"
+              - generic [ref=f15e1305]:
+                - text: "Speed:"
+                - generic [ref=f15e1306]: 1000 Mbps
+              - generic [ref=f15e1307]: "Allowed VLANs: 10, 60, 70, 80, 90"
+              - generic [ref=f15e1308]: "Connected to: dev-acc-sw-c (Gi0/1)"

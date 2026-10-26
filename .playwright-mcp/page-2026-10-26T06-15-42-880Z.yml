@@ -1,0 +1,169 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e10]:
+        - generic [ref=f3e11]:
+          - heading "NetScope v2.4" [level=1] [ref=f3e12]:
+            - text: NetScope
+            - generic [ref=f3e13]: v2.4
+          - generic [ref=f3e14]: 10-VLAN Enterprise
+        - paragraph [ref=f3e15]: Interactive Enterprise Network Engineering & Security Simulator
+      - navigation [ref=f3e16]:
+        - button "Topology" [ref=f3e17]
+        - button "Traffic Lab" [ref=f3e24]
+        - button "Config Studio (CLI)" [ref=f3e28]
+        - button "Fault Lab" [ref=f3e32]
+        - button "Validation & Report 12/14" [ref=f3e36]:
+          - generic [ref=f3e40]: Validation & Report
+          - generic [ref=f3e41]: 12/14
+      - generic [ref=f3e42]:
+        - button "IP Planner" [ref=f3e43]
+        - button "Hardware Anatomy" [ref=f3e47]
+        - button "Present Demo" [ref=f3e52]
+        - button "Reset Network to Initial Baseline" [ref=f3e57]
+  - main [ref=f3e61]:
+    - generic [ref=f3e805]:
+      - generic [ref=f3e806]:
+        - generic [ref=f3e807]:
+          - heading "Traffic Stimulus Generator" [level=2] [ref=f3e812]
+          - paragraph [ref=f3e813]: Inject simulated Ethernet frames and trace wire-speed forwarding decisions.
+        - generic [ref=f3e814]:
+          - generic [ref=f3e815]:
+            - generic [ref=f3e816]: Protocol & Application Flow
+            - combobox [ref=f3e817]:
+              - option "ICMP Echo Ping (Ping Request/Reply)" [selected]
+              - option "ARP Resolution (Address Resolution Protocol)"
+              - option "TCP SYN 3-Way Handshake Connection"
+              - option "HTTP GET Web Application Request"
+              - option "DHCP DORA (Lease Acquisition via Relay)"
+              - option "DNS Standard Query & A Record Resolution"
+          - generic [ref=f3e818]:
+            - generic [ref=f3e819]: Source Endpoint Host
+            - combobox [ref=f3e820]:
+              - option "ISP-EDGE-RTR • 198.51.100.1 (VLAN 1)"
+              - option "MGMT-WS-01 • 10.20.10.10 (VLAN 10)"
+              - option "HR-PC-01 • 10.20.20.10 (VLAN 20)" [selected]
+              - option "HR-PC-02 • 10.20.20.11 (VLAN 20)"
+              - option "FIN-PC-01 • 10.20.30.10 (VLAN 30)"
+              - option "FIN-PC-02 • 10.20.30.11 (VLAN 30)"
+              - option "ENG-CAD-01 • 10.20.40.10 (VLAN 40)"
+              - option "ENG-DEV-02 • 10.20.40.11 (VLAN 40)"
+              - option "PROD-SCADA-01 • 10.20.50.10 (VLAN 50)"
+              - option "PROD-PLC-02 • 10.20.50.11 (VLAN 50)"
+              - option "STAFF-LAPTOP-01 • 10.20.60.10 (VLAN 60)"
+              - option "STAFF-LAPTOP-02 • 10.20.60.11 (VLAN 60)"
+              - option "GUEST-PHONE-01 • 10.20.72.10 (VLAN 70)"
+              - option "PRINT-FLOOR1 • 10.20.90.10 (VLAN 90)"
+              - option "IOT-SENSOR-HUB • 10.20.90.11 (VLAN 90)"
+          - generic [ref=f3e821]:
+            - generic [ref=f3e822]: Destination Host or Service
+            - combobox [ref=f3e823]:
+              - option "FW-EDGE-01 • 198.51.100.2 (Edge Firewall (ASA 5516-X))"
+              - option "CORE-SW-01 • 10.20.254.2 (Core L3 Switch (Catalyst 3850))"
+              - option "ISP-EDGE-RTR • 198.51.100.1 (Internet Gateway (ISP Uplink))"
+              - option "MGMT-WS-01 • 10.20.10.10 (Network Admin Console)"
+              - option "HR-PC-02 • 10.20.20.11 (Payroll Specialist PC)"
+              - option "FIN-PC-01 • 10.20.30.10 (Chief Accountant PC)"
+              - option "FIN-PC-02 • 10.20.30.11 (Auditor Workstation)"
+              - option "ENG-CAD-01 • 10.20.40.10 (CAD Engineering Workstation)"
+              - option "ENG-DEV-02 • 10.20.40.11 (Firmware Developer PC)"
+              - option "PROD-SCADA-01 • 10.20.50.10 (SCADA Master HMI Terminal)"
+              - option "PROD-PLC-02 • 10.20.50.11 (Assembly Line PLC Controller)"
+              - option "STAFF-LAPTOP-01 • 10.20.60.10 (Sales Manager Laptop)"
+              - option "STAFF-LAPTOP-02 • 10.20.60.11 (Marketing Specialist Laptop)"
+              - option "AP-GUEST-01 • 10.20.72.2 (Lobby Cisco Catalyst 9120 AP)"
+              - option "GUEST-PHONE-01 • 10.20.72.10 (Visitor iPhone (Guest Wi-Fi))"
+              - option "SRV-DC-DHCP • 10.20.80.10 (Active Directory & DHCP Server)"
+              - option "SRV-DNS-AUTH • 10.20.80.11 (Enterprise DNS Nameserver)"
+              - option "SRV-ERP-INTERNAL • 10.20.80.12 (SAP ERP & Database Server)" [selected]
+              - option "PRINT-FLOOR1 • 10.20.90.10 (Floor 1 Office Multifunction Printer)"
+              - option "IOT-SENSOR-HUB • 10.20.90.11 (Building Management IoT Hub)"
+              - option "DMZ-WEB-PUBLIC • 10.20.100.10 (Public Corporate Portal (DMZ))"
+              - option "DMZ-VPN-GATEWAY • 10.20.100.11 (Secure AnyConnect SSL VPN Gateway)"
+              - option "EXT-DNS-ROOT • 8.8.8.8 (Google Public DNS (8.8.8.8))"
+          - button "Transmit Simulated Packet" [ref=f3e824]
+        - generic [ref=f3e829]:
+          - generic [ref=f3e830]:
+            - generic [ref=f3e831]: Step 1 of 5
+            - generic [ref=f3e832]:
+              - button "0.5x" [ref=f3e833]
+              - button "1x" [ref=f3e834]
+              - button "2x" [ref=f3e835]
+          - generic [ref=f3e836]:
+            - button "Step Backward" [disabled] [ref=f3e837]
+            - button "Play Journey" [ref=f3e840]
+            - button "Step Forward" [ref=f3e844]
+            - button "Reset to Step 1" [ref=f3e847]
+        - generic [ref=f3e851]:
+          - heading "Hop-by-Hop Packet Event Timeline" [level=3] [ref=f3e852]
+          - generic [ref=f3e853] [cursor=pointer]:
+            - generic [ref=f3e854]:
+              - generic [ref=f3e855]:
+                - generic [ref=f3e856]: "1"
+                - generic [ref=f3e857]: HR-PC-01
+              - generic [ref=f3e858]: ORIGINATE
+            - paragraph [ref=f3e859]: HR Lead Workstation generated ICMP_PING packet towards 10.20.80.12
+          - generic [ref=f3e860] [cursor=pointer]:
+            - generic [ref=f3e861]:
+              - generic [ref=f3e862]:
+                - generic [ref=f3e863]: "2"
+                - generic [ref=f3e864]: ACC-SW-A
+              - generic [ref=f3e865]: FORWARD
+            - paragraph [ref=f3e866]: "802.1Q Encapsulation: Inserted 4-byte 802.1Q header with VID 20 and transmitted on trunk GigabitEthernet0/1 to Core"
+          - generic [ref=f3e867] [cursor=pointer]:
+            - generic [ref=f3e868]:
+              - generic [ref=f3e869]:
+                - generic [ref=f3e870]: "3"
+                - generic [ref=f3e871]: CORE-SW-01
+              - generic [ref=f3e872]: ROUTE
+            - paragraph [ref=f3e873]: "Inter-VLAN Routing: Core routed packet from Vlan20 to Vlan80. Decremented TTL to 127, rewrote L2 MACs, inserted 802.1Q VID 80 and forwarded on trunk Gi1/0/3"
+          - generic [ref=f3e874] [cursor=pointer]:
+            - generic [ref=f3e875]:
+              - generic [ref=f3e876]:
+                - generic [ref=f3e877]: "4"
+                - generic [ref=f3e878]: ACC-SW-C
+              - generic [ref=f3e879]: FORWARD
+            - paragraph [ref=f3e880]: "Access Port Delivery: Access Switch C (Building 3) stripped 802.1Q tag and forwarded untagged frame out Fa0/6 to SAP ERP & Database Server"
+          - generic [ref=f3e881] [cursor=pointer]:
+            - generic [ref=f3e882]:
+              - generic [ref=f3e883]:
+                - generic [ref=f3e884]: "5"
+                - generic [ref=f3e885]: SRV-ERP-INTERNAL
+              - generic [ref=f3e886]: CONSUME
+            - paragraph [ref=f3e887]: SAP ERP & Database Server received packet, validated IP checksum, and processed ICMP_PING request
+      - generic [ref=f3e888]:
+        - generic [ref=f3e889]:
+          - generic [ref=f3e894]:
+            - heading "Transmission & Delivery Succeeded" [level=3] [ref=f3e895]
+            - paragraph [ref=f3e896]: "Inter-VLAN routing succeeded: HR Lead Workstation (VLAN 20) reached SAP ERP & Database Server (VLAN 80) via Core Switch L3 routing."
+          - generic [ref=f3e897]:
+            - generic [ref=f3e898]: "Total Hops: 5"
+            - generic [ref=f3e899]: "L2 MAC Rewrites: 1"
+            - generic [ref=f3e900]: "NAT PAT Translations: 0"
+        - generic [ref=f3e901]:
+          - generic [ref=f3e902]:
+            - heading "Hop Forwarding Rationale & Device Decision" [level=3] [ref=f3e906]
+            - generic [ref=f3e907]:
+              - text: "Device:"
+              - strong [ref=f3e908]: dev-hr-01
+          - generic [ref=f3e909]: HR Lead Workstation generated ICMP_PING packet towards 10.20.80.12
+        - generic [ref=f3e910]:
+          - heading "Protocol Header Dissection (OSI Layers 2 – 7)" [level=3] [ref=f3e917]
+          - generic [ref=f3e918]:
+            - generic [ref=f3e919]:
+              - generic [ref=f3e920]: • Layer 2 — Ethernet II Frame
+              - generic [ref=f3e921]:
+                - generic [ref=f3e922]: "Src MAC: 00:50:56:01:20:01"
+                - generic [ref=f3e923]: "Dst MAC: 00:1c:58:11:bb:01"
+                - generic [ref=f3e924]: "EtherType: 0x0800"
+            - generic [ref=f3e925]:
+              - generic [ref=f3e926]: • Layer 3 — Internet Protocol Version 4 (IPv4)
+              - generic [ref=f3e927]:
+                - generic [ref=f3e928]: "Src IP: 10.20.20.10"
+                - generic [ref=f3e929]: "Dst IP: 10.20.80.12"
+                - generic [ref=f3e930]: "TTL: 128"
+                - generic [ref=f3e931]: "Protocol: ICMP"
+            - generic [ref=f3e932]:
+              - generic [ref=f3e933]: • Layer 4 — Transport Layer
+              - generic [ref=f3e934]: "ICMP Type: ECHO_REQUEST"
+            - generic [ref=f3e936]: "Payload: ICMP Echo Request (id=0x021a, seq=1, ttl=128, len=64 bytes)"

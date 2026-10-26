@@ -1,0 +1,234 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - generic [ref=f4e10]:
+        - generic [ref=f4e11]:
+          - heading "NetScope v2.4" [level=1] [ref=f4e12]:
+            - text: NetScope
+            - generic [ref=f4e13]: v2.4
+          - generic [ref=f4e14]: 10-VLAN Enterprise
+        - paragraph [ref=f4e15]: Interactive Enterprise Network Engineering & Security Simulator
+      - navigation [ref=f4e16]:
+        - button "Topology" [ref=f4e17]
+        - button "Traffic Lab" [ref=f4e24]
+        - button "Config Studio (CLI)" [ref=f4e28]
+        - button "Fault Lab" [ref=f4e32]
+        - button "Validation & Report 12/14" [ref=f4e36]:
+          - generic [ref=f4e40]: Validation & Report
+          - generic [ref=f4e41]: 12/14
+      - generic [ref=f4e42]:
+        - button "IP Planner" [ref=f4e43]
+        - button "Hardware Anatomy" [ref=f4e47]
+        - button "Present Demo" [ref=f4e52]
+        - button "Reset Network to Initial Baseline" [ref=f4e57]
+  - main [ref=f4e61]:
+    - generic [ref=f4e62]:
+      - generic [ref=f4e63]:
+        - generic [ref=f4e64]:
+          - generic [ref=f4e65]:
+            - button "Zoom In" [ref=f4e66]
+            - generic [ref=f4e70]: 100%
+            - button "Zoom Out" [ref=f4e71]
+            - button "Reset View" [ref=f4e75]
+          - generic [ref=f4e81]:
+            - generic [ref=f4e84]: "VLAN Filter:"
+            - combobox [ref=f4e85]:
+              - option "All VLANs (Show Full Topology)" [selected]
+              - 'option "VLAN 10: Network Management (10.20.10.0/26)"'
+              - 'option "VLAN 20: Human Resources (HR) (10.20.20.0/24)"'
+              - 'option "VLAN 30: Finance & Accounting (10.20.30.0/24)"'
+              - 'option "VLAN 40: Engineering & R&D (10.20.40.0/23)"'
+              - 'option "VLAN 50: Production & OT (SCADA) (10.20.50.0/24)"'
+              - 'option "VLAN 60: Corporate Staff (10.20.60.0/23)"'
+              - 'option "VLAN 70: Guest Wi-Fi (10.20.72.0/22)"'
+              - 'option "VLAN 80: Internal Data Center Servers (10.20.80.0/24)"'
+              - 'option "VLAN 90: Printers & IoT Peripherals (10.20.90.0/24)"'
+              - 'option "VLAN 100: DMZ Perimeter Services (10.20.100.0/27)"'
+        - generic [ref=f4e86]:
+          - generic [ref=f4e87]: Campus Hierarchy
+          - generic [ref=f4e88]: Point-to-Point Transit Link (10.20.254.0/30)
+          - generic [ref=f4e91]: 802.1Q Dot1q Trunk Uplink (Allowed VLANs)
+          - generic [ref=f4e94]: Access Switchport (Untagged Department Link)
+          - generic [ref=f4e97]: Disconnected / Down Interface
+        - img [ref=f4e101]:
+          - generic [ref=f4e103]:
+            - generic [ref=f4e105]: "BUILDING 1: HR & FINANCE"
+            - generic [ref=f4e107]: "BUILDING 2: ENGINEERING & OT"
+            - generic [ref=f4e109]: "BUILDING 3: DC & OPERATIONS"
+            - generic [ref=f4e111]: DMZ SECURE ZONE (VLAN 100)
+          - generic [ref=f4e112]:
+            - generic [ref=f4e113] [cursor=pointer]: TRUNK
+            - generic [ref=f4e118] [cursor=pointer]: TRUNK
+            - generic [ref=f4e123] [cursor=pointer]: TRUNK
+            - generic [ref=f4e128] [cursor=pointer]
+            - generic [ref=f4e130] [cursor=pointer]
+            - generic [ref=f4e132] [cursor=pointer]
+            - generic [ref=f4e134] [cursor=pointer]
+            - generic [ref=f4e136] [cursor=pointer]
+            - generic [ref=f4e138] [cursor=pointer]
+            - generic [ref=f4e140] [cursor=pointer]
+            - generic [ref=f4e142] [cursor=pointer]
+            - generic [ref=f4e144] [cursor=pointer]
+            - generic [ref=f4e146] [cursor=pointer]
+            - generic [ref=f4e148] [cursor=pointer]
+            - generic [ref=f4e150] [cursor=pointer]
+            - generic [ref=f4e152] [cursor=pointer]
+            - generic [ref=f4e154] [cursor=pointer]
+            - generic [ref=f4e156] [cursor=pointer]
+            - generic [ref=f4e158] [cursor=pointer]
+            - generic [ref=f4e160] [cursor=pointer]
+          - generic [ref=f4e162]:
+            - generic [ref=f4e163] [cursor=pointer]:
+              - generic [ref=f4e168]: FW-EDGE-01
+              - generic [ref=f4e169]: 198.51.100.2
+            - generic [ref=f4e170] [cursor=pointer]:
+              - generic [ref=f4e177]: CORE-SW-01
+              - generic [ref=f4e178]: 10.20.254.2
+            - generic [ref=f4e179] [cursor=pointer]:
+              - generic [ref=f4e185]: ACC-SW-A
+              - generic [ref=f4e186]: Catalyst
+            - generic [ref=f4e187] [cursor=pointer]:
+              - generic [ref=f4e193]: ACC-SW-B
+              - generic [ref=f4e194]: Catalyst
+            - generic [ref=f4e195] [cursor=pointer]:
+              - generic [ref=f4e201]: ACC-SW-C
+              - generic [ref=f4e202]: Catalyst
+            - generic [ref=f4e203] [cursor=pointer]:
+              - generic [ref=f4e209]: DMZ-SW-01
+              - generic [ref=f4e210]: Catalyst
+            - generic [ref=f4e211] [cursor=pointer]:
+              - generic [ref=f4e216]: ISP-EDGE-RTR
+              - generic [ref=f4e217]: 198.51.100.1
+            - generic [ref=f4e218] [cursor=pointer]:
+              - generic [ref=f4e224]: MGMT-WS-01
+              - generic [ref=f4e225]: 10.20.10.10
+            - generic [ref=f4e226] [cursor=pointer]:
+              - generic [ref=f4e232]: HR-PC-01
+              - generic [ref=f4e233]: 10.20.20.10
+            - generic [ref=f4e234] [cursor=pointer]:
+              - generic [ref=f4e240]: HR-PC-02
+              - generic [ref=f4e241]: 10.20.20.11
+            - generic [ref=f4e242] [cursor=pointer]:
+              - generic [ref=f4e248]: FIN-PC-01
+              - generic [ref=f4e249]: 10.20.30.10
+            - generic [ref=f4e250] [cursor=pointer]:
+              - generic [ref=f4e256]: FIN-PC-02
+              - generic [ref=f4e257]: 10.20.30.11
+            - generic [ref=f4e258] [cursor=pointer]:
+              - generic [ref=f4e264]: ENG-CAD-01
+              - generic [ref=f4e265]: 10.20.40.10
+            - generic [ref=f4e266] [cursor=pointer]:
+              - generic [ref=f4e272]: ENG-DEV-02
+              - generic [ref=f4e273]: 10.20.40.11
+            - generic [ref=f4e274] [cursor=pointer]:
+              - generic [ref=f4e280]: PROD-SCADA-01
+              - generic [ref=f4e281]: 10.20.50.10
+            - generic [ref=f4e282] [cursor=pointer]:
+              - generic [ref=f4e288]: PROD-PLC-02
+              - generic [ref=f4e289]: 10.20.50.11
+            - generic [ref=f4e290] [cursor=pointer]:
+              - generic [ref=f4e295]: STAFF-LAPTOP-01
+              - generic [ref=f4e296]: 10.20.60.10
+            - generic [ref=f4e297] [cursor=pointer]:
+              - generic [ref=f4e302]: STAFF-LAPTOP-02
+              - generic [ref=f4e303]: 10.20.60.11
+            - generic [ref=f4e304] [cursor=pointer]:
+              - generic [ref=f4e313]: AP-GUEST-01
+              - generic [ref=f4e314]: 10.20.72.2
+            - generic [ref=f4e315] [cursor=pointer]:
+              - generic [ref=f4e320]: GUEST-PHONE-01
+              - generic [ref=f4e321]: 10.20.72.10
+            - generic [ref=f4e322] [cursor=pointer]:
+              - generic [ref=f4e328]: SRV-DC-DHCP
+              - generic [ref=f4e329]: 10.20.80.10
+            - generic [ref=f4e330] [cursor=pointer]:
+              - generic [ref=f4e336]: SRV-DNS-AUTH
+              - generic [ref=f4e337]: 10.20.80.11
+            - generic [ref=f4e338] [cursor=pointer]:
+              - generic [ref=f4e344]: SRV-ERP-INTERNAL
+              - generic [ref=f4e345]: 10.20.80.12
+            - generic [ref=f4e346] [cursor=pointer]:
+              - generic [ref=f4e353]: PRINT-FLOOR1
+              - generic [ref=f4e354]: 10.20.90.10
+            - generic [ref=f4e355] [cursor=pointer]:
+              - generic [ref=f4e361]: IOT-SENSOR-HUB
+              - generic [ref=f4e362]: 10.20.90.11
+            - generic [ref=f4e363] [cursor=pointer]:
+              - generic [ref=f4e369]: DMZ-WEB-PUBLIC
+              - generic [ref=f4e370]: 10.20.100.10
+            - generic [ref=f4e371] [cursor=pointer]:
+              - generic [ref=f4e377]: DMZ-VPN-GATEWAY
+              - generic [ref=f4e378]: 10.20.100.11
+            - generic [ref=f4e379] [cursor=pointer]:
+              - generic [ref=f4e385]: EXT-DNS-ROOT
+              - generic [ref=f4e386]: 8.8.8.8
+      - generic [ref=f4e388]:
+        - generic [ref=f4e389]:
+          - generic [ref=f4e395]:
+            - generic [ref=f4e396]:
+              - heading "CORE-SW-01" [level=3] [ref=f4e397]
+              - generic [ref=f4e398]: L3_CORE
+            - paragraph [ref=f4e399]: Core L3 Switch (Catalyst 3850) • Building 1 - MDF Data Center
+          - generic [ref=f4e400]:
+            - button "Anatomy" [ref=f4e401]
+            - button [ref=f4e406]
+        - generic [ref=f4e410]:
+          - button "Interfaces (4)" [ref=f4e411]
+          - button "MAC Table (7)" [ref=f4e412]
+          - button "ARP Cache (8)" [ref=f4e413]
+          - button "Routing Table (11)" [ref=f4e414]
+          - button "Cisco Config" [ref=f4e415]
+        - generic [ref=f4e417]:
+          - generic [ref=f4e418]:
+            - generic [ref=f4e419]:
+              - generic [ref=f4e420]:
+                - generic [ref=f4e422]: GigabitEthernet1/0/24
+                - generic [ref=f4e423]: ROUTED
+              - button "SHUTDOWN" [ref=f4e424]
+            - generic [ref=f4e425]:
+              - generic [ref=f4e426]: "MAC: 00:1c:58:11:bb:24"
+              - generic [ref=f4e427]:
+                - text: "Speed:"
+                - generic [ref=f4e428]: 1000 Mbps
+              - generic [ref=f4e429]: "IP: 10.20.254.2"
+              - generic [ref=f4e430]: "Mask: 255.255.255.252"
+              - generic [ref=f4e431]: "Connected to: dev-fw-01 (Gi1/2)"
+          - generic [ref=f4e432]:
+            - generic [ref=f4e433]:
+              - generic [ref=f4e434]:
+                - generic [ref=f4e436]: GigabitEthernet1/0/1
+                - generic [ref=f4e437]: TRUNK
+              - button "SHUTDOWN" [ref=f4e438]
+            - generic [ref=f4e439]:
+              - generic [ref=f4e440]: "MAC: 00:1c:58:11:bb:01"
+              - generic [ref=f4e441]:
+                - text: "Speed:"
+                - generic [ref=f4e442]: 1000 Mbps
+              - generic [ref=f4e443]: "Allowed VLANs: 10, 20, 30, 80"
+              - generic [ref=f4e444]: "Connected to: dev-acc-sw-a (Gi0/1)"
+          - generic [ref=f4e445]:
+            - generic [ref=f4e446]:
+              - generic [ref=f4e447]:
+                - generic [ref=f4e449]: GigabitEthernet1/0/2
+                - generic [ref=f4e450]: TRUNK
+              - button "SHUTDOWN" [ref=f4e451]
+            - generic [ref=f4e452]:
+              - generic [ref=f4e453]: "MAC: 00:1c:58:11:bb:02"
+              - generic [ref=f4e454]:
+                - text: "Speed:"
+                - generic [ref=f4e455]: 1000 Mbps
+              - generic [ref=f4e456]: "Allowed VLANs: 10, 40, 50, 80"
+              - generic [ref=f4e457]: "Connected to: dev-acc-sw-b (Gi0/1)"
+          - generic [ref=f4e458]:
+            - generic [ref=f4e459]:
+              - generic [ref=f4e460]:
+                - generic [ref=f4e462]: GigabitEthernet1/0/3
+                - generic [ref=f4e463]: TRUNK
+              - button "SHUTDOWN" [ref=f4e464]
+            - generic [ref=f4e465]:
+              - generic [ref=f4e466]: "MAC: 00:1c:58:11:bb:03"
+              - generic [ref=f4e467]:
+                - text: "Speed:"
+                - generic [ref=f4e468]: 1000 Mbps
+              - generic [ref=f4e469]: "Allowed VLANs: 10, 60, 70, 80, 90"
+              - generic [ref=f4e470]: "Connected to: dev-acc-sw-c (Gi0/1)"

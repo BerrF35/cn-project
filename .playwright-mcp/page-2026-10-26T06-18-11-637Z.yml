@@ -1,0 +1,71 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - generic [ref=f4e10]:
+        - generic [ref=f4e11]:
+          - heading "NetScope v2.4" [level=1] [ref=f4e12]:
+            - text: NetScope
+            - generic [ref=f4e13]: v2.4
+          - generic [ref=f4e14]: 10-VLAN Enterprise
+        - paragraph [ref=f4e15]: Interactive Enterprise Network Engineering & Security Simulator
+      - navigation [ref=f4e16]:
+        - button "Topology" [ref=f4e17]
+        - button "Traffic Lab" [ref=f4e24]
+        - button "Config Studio (CLI)" [ref=f4e28]
+        - button "Fault Lab" [ref=f4e32]
+        - button "Validation & Report 12/14" [ref=f4e36]:
+          - generic [ref=f4e40]: Validation & Report
+          - generic [ref=f4e41]: 12/14
+      - generic [ref=f4e42]:
+        - button "IP Planner" [ref=f4e43]
+        - button "Hardware Anatomy" [ref=f4e47]
+        - button "Present Demo" [ref=f4e52]
+        - button "Reset Network to Initial Baseline" [ref=f4e57]
+  - main [ref=f4e61]:
+    - generic [ref=f4e471]:
+      - generic [ref=f4e472]:
+        - generic [ref=f4e477]:
+          - generic [ref=f4e478]:
+            - heading "Configuration Studio & Cisco IOS Engine" [level=2] [ref=f4e479]
+            - generic [ref=f4e480]: Cisco Catalyst 2960-X 24-Port Gigabit
+          - paragraph [ref=f4e481]: Interactive CLI parser and visual switchport provisioning engine with live state mutation.
+        - generic [ref=f4e482]:
+          - generic [ref=f4e483]:
+            - generic [ref=f4e484]: "Target Device:"
+            - combobox [ref=f4e485]:
+              - option "FW-EDGE-01 (ASA)"
+              - option "CORE-SW-01 (Catalyst)"
+              - option "ACC-SW-A (Catalyst)" [selected]
+              - option "ACC-SW-B (Catalyst)"
+              - option "ACC-SW-C (Catalyst)"
+              - option "DMZ-SW-01 (Catalyst)"
+          - generic [ref=f4e486]:
+            - button "Cisco CLI Terminal" [ref=f4e487]
+            - button "Visual Port Matrix" [ref=f4e488]
+          - button "Export .CFG" [ref=f4e489]
+      - generic [ref=f4e494]:
+        - generic [ref=f4e496]:
+          - generic [ref=f4e497]:
+            - generic [ref=f4e498]: "Console Port (9600-8-N-1): ACC-SW-A"
+            - generic [ref=f4e503]:
+              - text: Type
+              - strong [ref=f4e504]: "?"
+              - text: or
+              - strong [ref=f4e505]: help
+              - text: for valid commands
+          - generic [ref=f4e506]:
+            - generic [ref=f4e507]: "Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(2)E7Technical Support: http://www.cisco.com/techsupportCopyright (c) 1986-2024 by Cisco Systems, Inc.Connected to ACC-SW-A virtual console port."
+            - generic [ref=f4e508]:
+              - generic [ref=f4e509]: ACC-SW-A# show vlan brief
+              - generic [ref=f4e510]: VLAN Name Status Ports ---- -------------------------------- --------- ------------------------------- 1 default active Fa0/21, Fa0/22 10 Network_Management active Fa0/1 20 Human_Resources__HR_ active Fa0/2, Fa0/3 30 Finance___Accounting active Fa0/4, Fa0/5
+            - generic [ref=f4e520]:
+              - generic [ref=f4e521]: ACC-SW-A# show mac address-table
+              - generic [ref=f4e522]: Mac Address Table ------------------------------------------- Vlan Mac Address Type Ports ---- ----------- -------- ----- 10 00:50:56:01:10:01 DYNAMIC Fa0/1 20 00:50:56:01:20:01 DYNAMIC Fa0/2 20 00:50:56:01:20:02 DYNAMIC Fa0/3 30 00:50:56:01:30:01 DYNAMIC Fa0/4 30 00:50:56:01:30:02 DYNAMIC Fa0/5 20 00:1c:58:11:bb:01 DYNAMIC Gi0/1 30 00:1c:58:11:bb:01 DYNAMIC Gi0/1
+          - generic [ref=f4e511]:
+            - generic [ref=f4e512]: ACC-SW-A#
+            - textbox "Enter command (e.g. show vlan brief, interface Fa0/2, shutdown)..." [active] [ref=f4e513]
+        - generic [ref=f4e514]:
+          - generic [ref=f4e515]:
+            - heading "Live Running-Config Preview" [level=3] [ref=f4e516]
+            - generic [ref=f4e517]: • NVRAM Synced
+          - generic [ref=f4e518]: "! Last configuration change at 2026-10-26T06:18:11.112Z ! NVRAM config last updated by NetScope Simulator version 15.2 service timestamps debug datetime msec service timestamps log datetime msec no service password-encryption ! hostname ACC-SW-A ! boot-start-marker boot-end-marker ! spanning-tree mode rapid-pvst spanning-tree extend system-id ! ! --- VLAN Database Provisioning --- vlan 10 name Network_Management vlan 20 name Human_Resources__HR_ vlan 30 name Finance___Accounting vlan 40 name Engineering___R_D vlan 50 name Production___OT__SCADA_ vlan 60 name Corporate_Staff vlan 70 name Guest_Wi-Fi vlan 80 name Internal_Data_Center_Servers vlan 90 name Printers___IoT_Peripherals ! ! --- Interface Port Allocations --- interface GigabitEthernet0/1 description 802.1Q High-Speed Trunk Uplink to Core switchport mode trunk switchport trunk encapsulation dot1q switchport trunk allowed vlan 10,20,30,80 switchport trunk native vlan 1 spanning-tree portfast trunk no shutdown ! interface FastEthernet0/1 description Access Port for Host Endpoints switchport mode access switchport access vlan 10 spanning-tree portfast switchport port-security switchport port-security maximum 2 switchport port-security violation restrict no shutdown ! interface FastEthernet0/2 description Access Port for Host Endpoints switchport mode access switchport access vlan 20 spanning-tree portfast switchport port-security switchport port-security maximum 2 switchport port-security violation restrict no shutdown ! interface FastEthernet0/3 description Access Port for Host Endpoints switchport mode access switchport access vlan 20 spanning-tree portfast switchport port-security switchport port-security maximum 2 switchport port-security violation restrict no shutdown ! interface FastEthernet0/4 description Access Port for Host Endpoints switchport mode access switchport access vlan 30 spanning-tree portfast switchport port-security switchport port-security maximum 2 switchport port-security violation restrict no shutdown ! interface FastEthernet0/5 description Access Port for Host Endpoints switchport mode access switchport access vlan 30 spanning-tree portfast switchport port-security switchport port-security maximum 2 switchport port-security violation restrict no shutdown ! interface FastEthernet0/21 description Access Port for Host Endpoints switchport mode access switchport access vlan 999 spanning-tree portfast switchport port-security switchport port-security maximum 2 switchport port-security violation restrict shutdown ! interface FastEthernet0/22 description Access Port for Host Endpoints switchport mode access switchport access vlan 999 spanning-tree portfast switchport port-security switchport port-security maximum 2 switchport port-security violation restrict shutdown ! interface Vlan10 description In-band Management SVI ip address 10.20.10.2 255.255.255.192 no shutdown ! ip default-gateway 10.20.10.1 ! line con 0 logging synchronous line vty 0 4 transport input ssh login local ! end"
