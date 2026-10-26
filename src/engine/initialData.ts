@@ -752,6 +752,17 @@ export const INITIAL_DEVICES: NetworkDevice[] = [
         adminStatus: 'up',
         speedMbps: 10000,
         connectedTo: { deviceId: 'dev-fw-01', interfaceId: 'Gi1/1' }
+      },
+      {
+        id: 'eth1',
+        name: 'Ethernet0/1',
+        macAddress: '00:fe:c8:99:00:02',
+        ipAddress: '8.8.8.1',
+        subnetMask: '255.255.255.0',
+        mode: 'routed',
+        adminStatus: 'up',
+        speedMbps: 10000,
+        connectedTo: { deviceId: 'dev-ext-dns', interfaceId: 'eth0' }
       }
     ],
     routingTable: [
@@ -1312,6 +1323,17 @@ export const INITIAL_DEVICES: NetworkDevice[] = [
 ];
 
 export const INITIAL_LINKS: NetworkLink[] = [
+  // Internet Backbone Link: Root DNS to ISP Edge Router
+  {
+    id: 'link-internet-01',
+    sourceDeviceId: 'dev-ext-dns',
+    sourceInterfaceId: 'eth0',
+    targetDeviceId: 'dev-cloud-01',
+    targetInterfaceId: 'eth1',
+    linkType: 'wan',
+    status: 'up',
+    colorHex: '#38bdf8'
+  },
   // WAN Link: ISP to Firewall Outside
   {
     id: 'link-wan-01',

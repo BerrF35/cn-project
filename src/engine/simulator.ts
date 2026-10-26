@@ -749,21 +749,29 @@ export function simulateTraffic(
                   let isBlockedByPolicy = false;
                   let blockingReason = '';
 
+                  // Look up target VLAN
+                  const dstVlanDef = state.vlans.find(v => {
+                    const parts = v.subnet.split('/');
+                    return isIpInSubnet(targetIp, parts[0], parseInt(parts[1], 10));
+                  });
+                  const dstVlanId = dstVlanDef ? dstVlanDef.id : (dstDev?.interfaces[0]?.accessVlan || 80);
+
                   // Check guest isolation
                   if (srcVlan === 70 && targetIp.startsWith('10.20.80.')) {
                     isBlockedByPolicy = true;
                     blockingReason = 'ACL "BLOCK_GUEST_TO_INTERNAL": Deny Guest Wi-Fi (10.20.72.0/22) to Internal Servers (10.20.80.0/24)';
                   }
-                  // Check OT SCADA isolation
-                  if (srcVlan === 50 && (targetIp.startsWith('10.20.60.') || targetIp.startsWith('10.20.61.'))) {
+                  // Check OT SCADA isolation (bidirectional between SCADA and HR/Fin/Corp/Guest)
+                  if ((srcVlan === 50 && [20, 30, 60, 70].includes(dstVlanId)) ||
+                      (dstVlanId === 50 && [20, 30, 60, 70].includes(srcVlan))) {
                     isBlockedByPolicy = true;
-                    blockingReason = 'ACL "BLOCK_OT_TO_CORP": Deny Industrial OT SCADA (10.20.50.0/24) to Corporate Staff (10.20.60.0/23)';
+                    blockingReason = 'ACL 101 Deny: Inter-VLAN Traffic between Production OT SCADA (VLAN 50) and Standard Departments is isolated';
                   }
 
                   if (isBlockedByPolicy) {
                     recordStep({
                       currentDeviceId: core.id,
-                      ingressInterfaceId: 'Gi1/0/3',
+                      ingressInterfaceId: 'Gi1/0/1',
                       egressInterfaceIds: [],
                       vlanId: srcVlan,
                       has8021qTag: false,
@@ -803,198 +811,260 @@ export function simulateTraffic(
                       const isDmz = targetIp.startsWith('10.20.100.');
 
                       if (isInternet || isDmz) {
-                      // Route out via Transit link Gi1/0/24 to Firewall (10.20.254.1)
-                      const routedTransitHeader: PacketHeader = {
-                        layer2: {
-                          srcMac: '00:1c:58:11:bb:24', // Core transit MAC
-                          dstMac: '00:1c:58:22:aa:02', // FW transit MAC
-                          ethertype: '0x0800'
-                        },
-                        layer3: {
-                          ...ipHeader.layer3!,
-                          ttl: (ipHeader.layer3?.ttl || 64) - 1
-                        },
-                        layer4: ipHeader.layer4,
-                        payloadSummary: ipHeader.payloadSummary
-                      };
-                      l2Rewrites++;
-
-                      recordStep({
-                        currentDeviceId: core.id,
-                        ingressInterfaceId: 'Gi1/0/1',
-                        egressInterfaceIds: ['Gi1/0/24'],
-                        has8021qTag: false,
-                        packetHeader: routedTransitHeader,
-                        action: 'ROUTE',
-                        rationale: `L3 Routing: Core decremented TTL to ${routedTransitHeader.layer3?.ttl}, rewritten L2 header (Src: Core Gi1/0/24, Dst: FW Gi1/2), forwarded via default route 0.0.0.0/0 to next-hop 10.20.254.1`,
-                        hardwareInternals: {
-                          ingressSerDes: 'Trunk SFP Receiver',
-                          tcamLookup: 'FIB LPM Match: 0.0.0.0/0 -> Next Hop 10.20.254.1',
-                          switchFabricBus: 'Cisco Multilayer Switching ASIC',
-                          egressPortQueue: 'Gi1/0/24 Transit Outbound Queue',
-                          tagEngineAction: 'TAG_REMOVED',
-                          latencyNanos: 780
-                        }
-                      });
-
-                      // Firewall Processing
-                      const fw = findDevice('dev-fw-01');
-                      if (fw) {
-                        if (isInternet) {
-                          // Dynamic PAT NAT Translation
-                          natTranslations++;
-                          const nattedHeader: PacketHeader = {
-                            ...routedTransitHeader,
-                            layer2: {
-                              srcMac: '00:1c:58:22:aa:01', // FW Outside MAC
-                              dstMac: '00:fe:c8:99:00:01', // ISP Router MAC
-                              ethertype: '0x0800'
-                            },
-                            layer3: {
-                              ...routedTransitHeader.layer3!,
-                              srcIp: '198.51.100.2', // Translated public IP!
-                              ttl: (routedTransitHeader.layer3?.ttl || 64) - 1
-                            }
-                          };
-
-                          recordStep({
-                            currentDeviceId: fw.id,
-                            ingressInterfaceId: 'Gi1/2',
-                            egressInterfaceIds: ['Gi1/1'],
-                            has8021qTag: false,
-                            packetHeader: nattedHeader,
-                            action: 'NAT_TRANSLATE',
-                            rationale: `Firewall Stateful Inspection & PAT: Translated source ${srcIp} -> 198.51.100.2 (Port 10245). Forwarded to ISP Gateway 198.51.100.1`,
-                            hardwareInternals: {
-                              ingressSerDes: 'Gi1/2 SerDes',
-                              tcamLookup: 'Stateful Connection Flow Table + NAT Rule 1',
-                              switchFabricBus: 'Firewall Security Acceleration Engine',
-                              egressPortQueue: 'Outside Gi1/1 Queue',
-                              tagEngineAction: 'UNTOUCHED',
-                              latencyNanos: 920
-                            }
-                          });
-
-                          success = true;
-                          summary = `Outbound internet flow succeeded: ${srcDev.name} reached ${targetIp} via ASA Firewall Dynamic PAT (198.51.100.2).`;
-                        } else if (isDmz) {
-                          // DMZ forwarding
-                          const dmzHeader: PacketHeader = {
-                            ...routedTransitHeader,
-                            layer2: {
-                              srcMac: '00:1c:58:22:aa:03', // FW DMZ MAC
-                              dstMac: '00:50:56:a1:00:10', // DMZ Web server MAC
-                              ethertype: '0x0800'
-                            },
-                            layer3: {
-                              ...routedTransitHeader.layer3!,
-                              ttl: (routedTransitHeader.layer3?.ttl || 64) - 1
-                            }
-                          };
-
-                          recordStep({
-                            currentDeviceId: fw.id,
-                            ingressInterfaceId: 'Gi1/2',
-                            egressInterfaceIds: ['Gi1/3'],
-                            vlanId: 100,
-                            has8021qTag: false,
-                            packetHeader: dmzHeader,
-                            action: 'PERMIT',
-                            rationale: `Firewall Policy Permit: Inside -> DMZ (Rule FW-RULE-03) matched and forwarded to DMZ Switch out Gi1/3`
-                          });
-
-                          success = true;
-                          summary = `Inter-Zone routing succeeded: ${srcDev.name} reached DMZ service at ${targetIp} across ASA 5516-X.`;
-                        }
-                      }
-                    } else {
-                      // Internal Inter-VLAN routing (e.g. VLAN 20 HR to VLAN 80 ERP Server)
-                      const dstVlanDef = state.vlans.find(v => {
-                        const parts = v.subnet.split('/');
-                        return isIpInSubnet(targetIp, parts[0], parseInt(parts[1], 10));
-                      });
-                      const dstVlanId = dstVlanDef ? dstVlanDef.id : 80;
-
-                      const routedInternalHeader: PacketHeader = {
-                        layer2: {
-                          srcMac: '00:1c:58:11:bb:03', // Core SVI MAC for dst VLAN
-                          dstMac: dstDev?.interfaces[0].macAddress || '00:50:56:03:80:03',
-                          ethertype: '0x0800'
-                        },
-                        layer3: {
-                          ...ipHeader.layer3!,
-                          ttl: (ipHeader.layer3?.ttl || 64) - 1
-                        },
-                        layer4: ipHeader.layer4,
-                        payloadSummary: ipHeader.payloadSummary
-                      };
-                      l2Rewrites++;
-
-                      recordStep({
-                        currentDeviceId: core.id,
-                        ingressInterfaceId: 'Gi1/0/1',
-                        egressInterfaceIds: ['Gi1/0/3'],
-                        vlanId: dstVlanId,
-                        has8021qTag: true,
-                        packetHeader: {
-                          ...routedInternalHeader,
+                        // Route out via Transit link Gi1/0/24 to Firewall (10.20.254.1)
+                        const routedTransitHeader: PacketHeader = {
                           layer2: {
-                            ...routedInternalHeader.layer2,
-                            ethertype: '0x8100',
-                            vlanTag: { tpid: '0x8100', pcp: 0, dei: 0, vid: dstVlanId }
-                          }
-                        },
-                        action: 'ROUTE',
-                        rationale: `Inter-VLAN Routing: Core routed packet from Vlan${srcVlan} to Vlan${dstVlanId}. Decremented TTL to ${routedInternalHeader.layer3?.ttl || 63}, rewrote L2 MACs, inserted 802.1Q VID ${dstVlanId} and forwarded on trunk Gi1/0/3`,
-                        hardwareInternals: {
-                          ingressSerDes: 'Trunk Gi1/0/1 SFP SerDes',
-                          tcamLookup: `FIB Match: Subnet ${dstVlanDef?.subnet} -> Egress SVI Vlan${dstVlanId}`,
-                          switchFabricBus: 'Cisco CEF Layer 3 Forwarding ASIC',
-                          egressPortQueue: 'Trunk Gi1/0/3 High-speed FIFO',
-                          tagEngineAction: 'TAG_INSERTED',
-                          latencyNanos: 720
-                        }
-                      });
+                            srcMac: '00:1c:58:11:bb:24', // Core transit MAC
+                            dstMac: '00:1c:58:22:aa:02', // FW transit MAC
+                            ethertype: '0x0800'
+                          },
+                          layer3: {
+                            ...ipHeader.layer3!,
+                            ttl: (ipHeader.layer3?.ttl || 64) - 1
+                          },
+                          layer4: ipHeader.layer4,
+                          payloadSummary: ipHeader.payloadSummary
+                        };
+                        l2Rewrites++;
 
-                      // Destination switch receives and strips tag for access port
-                      const dstSw = findDevice('dev-acc-sw-c');
-                      if (dstSw && dstDev) {
                         recordStep({
-                          currentDeviceId: dstSw.id,
-                          ingressInterfaceId: 'Gi0/1',
-                          egressInterfaceIds: ['Fa0/6'],
-                          vlanId: dstVlanId,
+                          currentDeviceId: core.id,
+                          ingressInterfaceId: 'Gi1/0/1',
+                          egressInterfaceIds: ['Gi1/0/24'],
                           has8021qTag: false,
-                          packetHeader: routedInternalHeader,
-                          action: 'FORWARD',
-                          rationale: `Access Port Delivery: ${dstSw.name} stripped 802.1Q tag and forwarded untagged frame out Fa0/6 to ${dstDev.name}`,
+                          packetHeader: routedTransitHeader,
+                          action: 'ROUTE',
+                          rationale: `L3 Routing: Core decremented TTL to ${routedTransitHeader.layer3?.ttl}, rewritten L2 header (Src: Core Gi1/0/24, Dst: FW Gi1/2), forwarded via default route 0.0.0.0/0 to next-hop 10.20.254.1`,
                           hardwareInternals: {
-                            ingressSerDes: 'Trunk Gi0/1 SerDes',
-                            tcamLookup: `CAM lookup: MAC ${routedInternalHeader.layer2.dstMac} -> Fa0/6`,
-                            switchFabricBus: 'Shared memory bus',
-                            egressPortQueue: 'Fa0/6 Egress FIFO',
+                            ingressSerDes: 'Trunk SFP Receiver',
+                            tcamLookup: 'FIB LPM Match: 0.0.0.0/0 -> Next Hop 10.20.254.1',
+                            switchFabricBus: 'Cisco Multilayer Switching ASIC',
+                            egressPortQueue: 'Gi1/0/24 Transit Outbound Queue',
                             tagEngineAction: 'TAG_REMOVED',
-                            latencyNanos: 380
+                            latencyNanos: 780
                           }
                         });
 
+                        // Firewall Processing
+                        const fw = findDevice('dev-fw-01');
+                        if (fw) {
+                          if (isInternet) {
+                            // Dynamic PAT NAT Translation
+                            natTranslations++;
+                            const nattedHeader: PacketHeader = {
+                              ...routedTransitHeader,
+                              layer2: {
+                                srcMac: '00:1c:58:22:aa:01', // FW Outside MAC
+                                dstMac: '00:fe:c8:99:00:01', // ISP Router MAC
+                                ethertype: '0x0800'
+                              },
+                              layer3: {
+                                ...routedTransitHeader.layer3!,
+                                srcIp: '198.51.100.2', // Translated public IP!
+                                ttl: (routedTransitHeader.layer3?.ttl || 64) - 1
+                              }
+                            };
+
+                            recordStep({
+                              currentDeviceId: fw.id,
+                              ingressInterfaceId: 'Gi1/2',
+                              egressInterfaceIds: ['Gi1/1'],
+                              has8021qTag: false,
+                              packetHeader: nattedHeader,
+                              action: 'NAT_TRANSLATE',
+                              rationale: `Firewall Stateful Inspection & PAT: Translated source ${srcIp} -> 198.51.100.2 (Port 10245). Forwarded to ISP Gateway 198.51.100.1`,
+                              hardwareInternals: {
+                                ingressSerDes: 'Gi1/2 SerDes',
+                                tcamLookup: 'Stateful Connection Flow Table + NAT Rule 1',
+                                switchFabricBus: 'Firewall Security Acceleration Engine',
+                                egressPortQueue: 'Outside Gi1/1 Queue',
+                                tagEngineAction: 'UNTOUCHED',
+                                latencyNanos: 920
+                              }
+                            });
+
+                            // ISP Router Hop
+                            const ispRtr = findDevice('dev-cloud-01');
+                            if (ispRtr) {
+                              recordStep({
+                                currentDeviceId: ispRtr.id,
+                                ingressInterfaceId: 'eth0',
+                                egressInterfaceIds: ['eth1'],
+                                has8021qTag: false,
+                                packetHeader: nattedHeader,
+                                action: 'FORWARD',
+                                rationale: `WAN Backbone: ISP Edge Router routed packet across public autonomous system to destination IP ${targetIp}`
+                              });
+                            }
+
+                            // Public Destination Host
+                            if (dstDev) {
+                              recordStep({
+                                currentDeviceId: dstDev.id,
+                                ingressInterfaceId: dstDev.interfaces[0]?.id || 'eth0',
+                                egressInterfaceIds: [],
+                                has8021qTag: false,
+                                packetHeader: nattedHeader,
+                                action: 'CONSUME',
+                                rationale: `Public Internet Host ${dstDev.name} received packet and generated ICMP Echo Reply`
+                              });
+                            }
+
+                            success = true;
+                            summary = `Outbound internet flow succeeded: ${srcDev.name} reached ${targetIp} via ASA Firewall Dynamic PAT (198.51.100.2).`;
+                          } else if (isDmz) {
+                            // DMZ forwarding
+                            const dmzHeader: PacketHeader = {
+                              ...routedTransitHeader,
+                              layer2: {
+                                srcMac: '00:1c:58:22:aa:03', // FW DMZ MAC
+                                dstMac: '00:50:56:a1:00:10', // DMZ Web server MAC
+                                ethertype: '0x0800'
+                              },
+                              layer3: {
+                                ...routedTransitHeader.layer3!,
+                                ttl: (routedTransitHeader.layer3?.ttl || 64) - 1
+                              }
+                            };
+
+                            recordStep({
+                              currentDeviceId: fw.id,
+                              ingressInterfaceId: 'Gi1/2',
+                              egressInterfaceIds: ['Gi1/3'],
+                              vlanId: 100,
+                              has8021qTag: false,
+                              packetHeader: dmzHeader,
+                              action: 'PERMIT',
+                              rationale: `Firewall Policy Permit: Inside -> DMZ (Rule FW-RULE-03) matched and forwarded to DMZ Switch out Gi1/3`
+                            });
+
+                            const dmzSw = findDevice('dev-dmz-sw-01');
+                            if (dmzSw) {
+                              recordStep({
+                                currentDeviceId: dmzSw.id,
+                                ingressInterfaceId: 'Gi0/1',
+                                egressInterfaceIds: ['Fa0/1'],
+                                vlanId: 100,
+                                has8021qTag: false,
+                                packetHeader: dmzHeader,
+                                action: 'FORWARD',
+                                rationale: `DMZ Switching: Forwarded untagged frame on VLAN 100 to ${dstDev?.name || 'DMZ Server'}`
+                              });
+                            }
+
+                            if (dstDev) {
+                              recordStep({
+                                currentDeviceId: dstDev.id,
+                                ingressInterfaceId: dstDev.interfaces[0]?.id || 'eth0',
+                                egressInterfaceIds: [],
+                                vlanId: 100,
+                                has8021qTag: false,
+                                packetHeader: dmzHeader,
+                                action: 'CONSUME',
+                                rationale: `${dstDev.name} accepted inbound request in DMZ secure segment`
+                              });
+                            }
+
+                            success = true;
+                            summary = `Inter-Zone routing succeeded: ${srcDev.name} reached DMZ service at ${targetIp} across ASA 5516-X.`;
+                          }
+                        }
+                      } else {
+                        // Internal Inter-VLAN routing (e.g. VLAN 20 HR to VLAN 30 Finance, VLAN 40 Engineering, VLAN 80 ERP Server)
+                        // Dynamically find physical switch and port connected to dstDev
+                        const dstLink = state.links.find(
+                          l => (l.sourceDeviceId === dstDev?.id) || (l.targetDeviceId === dstDev?.id)
+                        );
+                        const dstSwId = dstLink ? (dstLink.sourceDeviceId === dstDev?.id ? dstLink.targetDeviceId : dstLink.sourceDeviceId) : 'dev-acc-sw-a';
+                        const dstSw = findDevice(dstSwId);
+                        const dstPort = dstLink ? (dstLink.sourceDeviceId === dstDev?.id ? dstLink.targetInterfaceId : dstLink.sourceInterfaceId) : 'Fa0/1';
+
+                        // Find trunk port on Core connected to dstSw
+                        const coreTrunkLink = state.links.find(
+                          l => (l.sourceDeviceId === core.id && l.targetDeviceId === dstSwId) ||
+                               (l.targetDeviceId === core.id && l.sourceDeviceId === dstSwId)
+                        );
+                        const coreEgressTrunkPort = coreTrunkLink ? (coreTrunkLink.sourceDeviceId === core.id ? coreTrunkLink.sourceInterfaceId : coreTrunkLink.targetInterfaceId) : 'Gi1/0/1';
+
+                        const routedInternalHeader: PacketHeader = {
+                          layer2: {
+                            srcMac: '00:1c:58:11:bb:03', // Core SVI MAC for dst VLAN
+                            dstMac: dstDev?.interfaces[0]?.macAddress || '00:50:56:03:80:03',
+                            ethertype: '0x0800'
+                          },
+                          layer3: {
+                            ...ipHeader.layer3!,
+                            ttl: (ipHeader.layer3?.ttl || 64) - 1
+                          },
+                          layer4: ipHeader.layer4,
+                          payloadSummary: ipHeader.payloadSummary
+                        };
+                        l2Rewrites++;
+
                         recordStep({
-                          currentDeviceId: dstDev.id,
-                          ingressInterfaceId: dstDev.interfaces[0].id,
-                          egressInterfaceIds: [],
+                          currentDeviceId: core.id,
+                          ingressInterfaceId: 'Gi1/0/1',
+                          egressInterfaceIds: [coreEgressTrunkPort],
                           vlanId: dstVlanId,
-                          has8021qTag: false,
-                          packetHeader: routedInternalHeader,
-                          action: 'CONSUME',
-                          rationale: `${dstDev.name} received packet, validated IP checksum, and processed ${params.protocol} request`
+                          has8021qTag: true,
+                          packetHeader: {
+                            ...routedInternalHeader,
+                            layer2: {
+                              ...routedInternalHeader.layer2,
+                              ethertype: '0x8100',
+                              vlanTag: { tpid: '0x8100', pcp: 0, dei: 0, vid: dstVlanId }
+                            }
+                          },
+                          action: 'ROUTE',
+                          rationale: `Inter-VLAN Routing: Core routed packet from Vlan${srcVlan} to Vlan${dstVlanId}. Decremented TTL to ${routedInternalHeader.layer3?.ttl || 63}, rewrote L2 MACs, inserted 802.1Q VID ${dstVlanId} and forwarded on trunk ${coreEgressTrunkPort} to ${dstSw?.name || 'Access Switch'}`,
+                          hardwareInternals: {
+                            ingressSerDes: 'Trunk SFP SerDes',
+                            tcamLookup: `FIB Match: Subnet ${dstVlanDef?.subnet} -> Egress SVI Vlan${dstVlanId}`,
+                            switchFabricBus: 'Cisco CEF Layer 3 Forwarding ASIC',
+                            egressPortQueue: `Trunk ${coreEgressTrunkPort} High-speed FIFO`,
+                            tagEngineAction: 'TAG_INSERTED',
+                            latencyNanos: 720
+                          }
                         });
 
-                        success = true;
-                        summary = `Inter-VLAN routing succeeded: ${srcDev.name} (VLAN ${srcVlan}) reached ${dstDev.name} (VLAN ${dstVlanId}) via Core Switch L3 routing.`;
+                        // Destination switch receives and strips tag for access port
+                        if (dstSw && dstDev) {
+                          recordStep({
+                            currentDeviceId: dstSw.id,
+                            ingressInterfaceId: 'Gi0/1',
+                            egressInterfaceIds: [dstPort],
+                            vlanId: dstVlanId,
+                            has8021qTag: false,
+                            packetHeader: routedInternalHeader,
+                            action: 'FORWARD',
+                            rationale: `Access Port Delivery: ${dstSw.name} stripped 802.1Q tag and forwarded untagged frame out ${dstPort} to ${dstDev.name}`,
+                            hardwareInternals: {
+                              ingressSerDes: 'Trunk Gi0/1 SerDes',
+                              tcamLookup: `CAM lookup: MAC ${routedInternalHeader.layer2.dstMac} -> ${dstPort}`,
+                              switchFabricBus: 'Shared memory bus',
+                              egressPortQueue: `${dstPort} Egress FIFO`,
+                              tagEngineAction: 'TAG_REMOVED',
+                              latencyNanos: 380
+                            }
+                          });
+
+                          recordStep({
+                            currentDeviceId: dstDev.id,
+                            ingressInterfaceId: dstDev.interfaces[0].id,
+                            egressInterfaceIds: [],
+                            vlanId: dstVlanId,
+                            has8021qTag: false,
+                            packetHeader: routedInternalHeader,
+                            action: 'CONSUME',
+                            rationale: `${dstDev.name} received packet, validated IP checksum, and processed ${params.protocol} request`
+                          });
+
+                          success = true;
+                          summary = `Inter-VLAN routing succeeded: ${srcDev.name} (VLAN ${srcVlan}) reached ${dstDev.name} (VLAN ${dstVlanId}) via Core Switch L3 routing.`;
+                        }
                       }
                     }
                   }
-                }
                 }
               }
             }

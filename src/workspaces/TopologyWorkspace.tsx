@@ -84,7 +84,42 @@ export const TopologyWorkspace: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Trigger Packet Flight between two devices
+  // Helper to verify if two devices share an active physical link
+  const hasDirectLink = useCallback((links: typeof state.links, idA: string, idB: string): boolean => {
+    return links.some(
+      l => (l.sourceDeviceId === idA && l.targetDeviceId === idB) ||
+           (l.targetDeviceId === idA && l.sourceDeviceId === idB)
+    );
+  }, [state.links]);
+
+  // BFS shortest physical link path finder (only traverses active lines)
+  const findLinkHopPath = useCallback((links: typeof state.links, startId: string, endId: string): string[] => {
+    if (startId === endId) return [startId];
+    const adj = new Map<string, string[]>();
+    for (const l of links) {
+      if (l.status === 'down') continue;
+      if (!adj.has(l.sourceDeviceId)) adj.set(l.sourceDeviceId, []);
+      if (!adj.has(l.targetDeviceId)) adj.set(l.targetDeviceId, []);
+      adj.get(l.sourceDeviceId)!.push(l.targetDeviceId);
+      adj.get(l.targetDeviceId)!.push(l.sourceDeviceId);
+    }
+    const queue: string[][] = [[startId]];
+    const visited = new Set<string>([startId]);
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      const last = cur[cur.length - 1];
+      if (last === endId) return cur;
+      for (const next of adj.get(last) || []) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          queue.push([...cur, next]);
+        }
+      }
+    }
+    return [startId, endId];
+  }, []);
+
+  // Trigger Packet Flight between two devices (STRICTLY ON NETWORK LINES)
   const triggerPacketFlight = useCallback((source: NetworkDevice, target: NetworkDevice) => {
     setContextMenu(null);
     setTargetSelectSource(null);
@@ -96,46 +131,79 @@ export const TopologyWorkspace: React.FC = () => {
       destinationDeviceId: target.id
     });
 
-    // Extract ordered physical link hops for the paper airplane
-    const flightNodes: FlightPathNode[] = [];
-    const visitedDeviceIds: string[] = [];
+    // 1. Collect sequence of device IDs from simulation trace
+    const rawDeviceSequence: string[] = [];
+    let dropDeviceId: string | null = null;
+    let dropReasonText: string | undefined = undefined;
 
     for (const step of trace.steps) {
       if (!step.currentDeviceId) continue;
-      const lastId = visitedDeviceIds[visitedDeviceIds.length - 1];
+      if (step.dropped) {
+        dropDeviceId = step.currentDeviceId;
+        dropReasonText = step.dropReason;
+      }
+      const lastDev = rawDeviceSequence[rawDeviceSequence.length - 1];
+      if (step.currentDeviceId !== lastDev) {
+        rawDeviceSequence.push(step.currentDeviceId);
+      }
+      if (step.dropped) break;
+    }
 
-      if (step.currentDeviceId !== lastId) {
-        visitedDeviceIds.push(step.currentDeviceId);
-        const dev = state.devices.find(d => d.id === step.currentDeviceId);
-        if (dev) {
-          flightNodes.push({
-            x: dev.x,
-            y: dev.y,
-            deviceId: dev.id,
-            name: dev.hostname || dev.name,
-            vlanId: step.vlanId,
-            isTrunk: step.has8021qTag,
-            action: step.action,
-            rationale: step.rationale,
-            dropped: step.dropped,
-            dropReason: step.dropReason
-          });
+    if (rawDeviceSequence.length === 0) {
+      rawDeviceSequence.push(source.id);
+    }
+
+    // 2. Strict Physical Link Expansion:
+    // Guarantee that EVERY adjacent pair (A -> B) is connected by a real network cable in state.links!
+    const strictlyConnectedDeviceIds: string[] = [rawDeviceSequence[0]];
+
+    for (let i = 0; i < rawDeviceSequence.length - 1; i++) {
+      const currentId = rawDeviceSequence[i];
+      const nextId = rawDeviceSequence[i + 1];
+
+      if (hasDirectLink(state.links, currentId, nextId)) {
+        strictlyConnectedDeviceIds.push(nextId);
+      } else {
+        // Expand path along real network cables using graph search
+        const expandedHops = findLinkHopPath(state.links, currentId, nextId);
+        for (let j = 1; j < expandedHops.length; j++) {
+          strictlyConnectedDeviceIds.push(expandedHops[j]);
         }
-      } else if (step.dropped && flightNodes.length > 0) {
-        flightNodes[flightNodes.length - 1].dropped = true;
-        flightNodes[flightNodes.length - 1].dropReason = step.dropReason;
       }
     }
 
-    // Fallback if direct link
-    if (flightNodes.length < 2) {
+    // 3. Map to FlightPathNode with exact (x, y) coordinates
+    const flightNodes: FlightPathNode[] = [];
+    const srcVlan = source.interfaces[0]?.accessVlan || 20;
+
+    for (let i = 0; i < strictlyConnectedDeviceIds.length; i++) {
+      const devId = strictlyConnectedDeviceIds[i];
+      const dev = state.devices.find(d => d.id === devId);
+      if (!dev) continue;
+
+      // Check if the link to the next device is a trunk link
+      let isTrunk = false;
+      if (i < strictlyConnectedDeviceIds.length - 1) {
+        const nextId = strictlyConnectedDeviceIds[i + 1];
+        const connectingLink = state.links.find(
+          l => (l.sourceDeviceId === devId && l.targetDeviceId === nextId) ||
+               (l.targetDeviceId === devId && l.sourceDeviceId === nextId)
+        );
+        isTrunk = connectingLink?.linkType === 'trunk';
+      }
+
+      const isDropNode = devId === dropDeviceId;
+
       flightNodes.push({
-        x: target.x,
-        y: target.y,
-        deviceId: target.id,
-        name: target.hostname || target.name,
-        vlanId: target.interfaces[0]?.accessVlan,
-        action: 'FORWARD'
+        x: dev.x,
+        y: dev.y,
+        deviceId: dev.id,
+        name: dev.hostname || dev.name,
+        vlanId: dev.interfaces[0]?.accessVlan || srcVlan,
+        isTrunk,
+        action: isDropNode ? 'DROP' : 'FORWARD',
+        dropped: isDropNode,
+        dropReason: isDropNode ? dropReasonText : undefined
       });
     }
 
@@ -148,7 +216,7 @@ export const TopologyWorkspace: React.FC = () => {
       nodes: flightNodes,
       isTwoWay: trace.success
     });
-  }, [runSimulation, state.devices]);
+  }, [runSimulation, state.devices, state.links, hasDirectLink, findLinkHopPath]);
 
   // Handle flight completion
   const handleFlightComplete = useCallback((success: boolean, summary: string) => {
