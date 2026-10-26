@@ -41,7 +41,7 @@ export const PresentationModal: React.FC = () => {
       badge: 'Step 1: Enterprise Architecture',
       title: 'Enterprise Campus Topology & 10-VLAN Segmentation',
       icon: Network,
-      narrative: `Conventional Packet Tracer demonstrations present simple 4-PC toy networks. NetScope models a realistic enterprise campus with 25+ connected nodes divided across 10 distinct IEEE 802.1Q VLANs using the private allocation block 10.20.0.0/16. The architecture implements a 3-tier hierarchical design: an Edge Firewall (Cisco ASA 5516-X), a Layer 3 Core Switch (Catalyst 3850-24T) running SVIs for high-speed inter-VLAN routing, and three Access Switches (Building 1 Admin/Finance, Building 2 Engineering/Production, Building 3 Corporate/Services).`,
+      narrative: `Course Rubric Alignment: "VLAN-Based Department Isolation – Separate HR, Finance, Production and R&D traffic." Our earlier Review 1/2 demonstration presented a flat 4-PC prototype on a single switch in Packet Tracer. Following our evaluator's feedback, NetScope preserves those exact 4 core curriculum departments (HR VLAN 20, Finance VLAN 30, Engineering/R&D VLAN 40, Production/OT SCADA VLAN 50) and elevates them into a realistic enterprise architecture. The campus connects 25+ nodes across 10 VLANs (10.20.0.0/16) with a Cisco Catalyst 3850 Core L3 switch, Cisco ASA 5516-X perimeter firewall with DMZ, and dedicated Access Switches across 3 campus buildings.`,
       actionLabel: 'Navigate to Topology Workspace',
       executeAction: () => {
         setActiveWorkspace('topology');

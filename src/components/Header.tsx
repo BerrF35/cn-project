@@ -57,6 +57,9 @@ export const Header: React.FC = () => {
               <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 10-VLAN Enterprise
               </span>
+              <span className="hidden xl:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                Rubric: HR • Finance • Production • R&D
+              </span>
             </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">
               Interactive Enterprise Network Engineering & Security Simulator
