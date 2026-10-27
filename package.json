@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build && node scripts/sync-dist.mjs",
+    "dev": "node scripts/prebuild.mjs && vite",
+    "build": "node scripts/prebuild.mjs && tsc && vite build && node scripts/sync-dist.mjs",
     "preview": "vite preview",
     "test": "npx tsx --test tests/flightPathValidation.test.mjs tests/networkEngine.test.mjs",
     "predeploy": "npm run build",

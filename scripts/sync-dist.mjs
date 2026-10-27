@@ -21,7 +21,13 @@ if (fs.existsSync('dist/assets')) {
 }
 if (fs.existsSync('dist')) {
   copyDir('dist', 'docs');
+  fs.copyFileSync('dist/index.html', 'index.html');
 }
 if (fs.existsSync('public/.nojekyll')) {
   fs.copyFileSync('public/.nojekyll', '.nojekyll');
+  fs.copyFileSync('public/.nojekyll', 'docs/.nojekyll');
+} else {
+  fs.writeFileSync('.nojekyll', '');
+  fs.writeFileSync('docs/.nojekyll', '');
 }
+console.log('✓ sync-dist: synchronized dist to docs, root index.html, and assets');
