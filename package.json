@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node scripts/sync-dist.mjs",
     "preview": "vite preview",
     "test": "npx tsx --test tests/flightPathValidation.test.mjs tests/networkEngine.test.mjs",
     "predeploy": "npm run build",
