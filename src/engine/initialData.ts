@@ -5,7 +5,8 @@ import {
   NetworkLink, 
   VlanDefinition, 
   NetworkState,
-  FirewallRule
+  FirewallRule,
+  InterVlanSecurityRule
 } from '../types/network';
 
 export const INITIAL_VLANS: VlanDefinition[] = [
@@ -196,6 +197,157 @@ export const INITIAL_FIREWALL_RULES: FirewallRule[] = [
     action: 'DENY',
     enabled: true,
     hitCount: 168
+  }
+];
+
+export const INITIAL_INTER_VLAN_RULES: InterVlanSecurityRule[] = [
+  {
+    id: 'RULE-GUEST-ISOLATION',
+    name: 'Zero-Trust Guest Isolation',
+    sourceVlanId: 70,
+    sourceName: 'Guest Wi-Fi (VLAN 70)',
+    destTarget: 'Internal Enterprise Subnets (10.20.0.0/16)',
+    protocol: 'IP',
+    action: 'DENY',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 170 deny ip 10.20.72.0 0.0.3.255 10.20.0.0 0.0.255.255',
+    rationale: 'Isolates untrusted visitor and contractor devices from touching any corporate database, server, or switch SVI.',
+    hitCount: 342
+  },
+  {
+    id: 'RULE-HR-PORTAL-PERMIT',
+    name: 'HR Access to Designated Portal',
+    sourceVlanId: 20,
+    sourceName: 'Human Resources (VLAN 20)',
+    destVlanId: 80,
+    destTarget: '10.20.80.10 (Active Directory & HR Portal)',
+    targetIp: '10.20.80.10',
+    protocol: 'TCP',
+    port: 443,
+    action: 'PERMIT',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 120 permit tcp 10.20.20.0 0.0.0.255 host 10.20.80.10 eq 443',
+    rationale: 'Permits HR personnel to authenticate and access personnel records via the designated secure HR portal.',
+    hitCount: 1289
+  },
+  {
+    id: 'RULE-HR-ERP-DENY',
+    name: 'HR Restriction from Financial ERP',
+    sourceVlanId: 20,
+    sourceName: 'Human Resources (VLAN 20)',
+    destVlanId: 80,
+    destTarget: '10.20.80.12 (Accounting & ERP Database)',
+    targetIp: '10.20.80.12',
+    protocol: 'TCP',
+    port: 3306,
+    action: 'DENY',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 120 deny ip 10.20.20.0 0.0.0.255 host 10.20.80.12',
+    rationale: 'Enforces least-privilege segregation of duties. HR employees are strictly barred from accounting databases.',
+    hitCount: 84
+  },
+  {
+    id: 'RULE-FIN-ERP-PERMIT',
+    name: 'Finance Access to Accounting ERP',
+    sourceVlanId: 30,
+    sourceName: 'Finance & Accounting (VLAN 30)',
+    destVlanId: 80,
+    destTarget: '10.20.80.12 (Accounting & ERP Database)',
+    targetIp: '10.20.80.12',
+    protocol: 'TCP',
+    port: 3306,
+    action: 'PERMIT',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 130 permit ip 10.20.30.0 0.0.0.255 host 10.20.80.12',
+    rationale: 'Allows authorized financial analysts to process invoices, accounts payable, and general ledger transactions.',
+    hitCount: 2450
+  },
+  {
+    id: 'RULE-FIN-HR-DENY',
+    name: 'Finance Restriction from Confidential HR Records',
+    sourceVlanId: 30,
+    sourceName: 'Finance & Accounting (VLAN 30)',
+    destVlanId: 80,
+    destTarget: '10.20.80.10 (HR Personnel Directory)',
+    targetIp: '10.20.80.10',
+    protocol: 'IP',
+    action: 'DENY',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 130 deny ip 10.20.30.0 0.0.0.255 host 10.20.80.10',
+    rationale: 'Protects confidential employee medical and salary compensation files from accounting workstations.',
+    hitCount: 56
+  },
+  {
+    id: 'RULE-PROD-OT-HISTORIAN',
+    name: 'Production OT Access to SCADA Historian',
+    sourceVlanId: 50,
+    sourceName: 'Production & OT SCADA (VLAN 50)',
+    destVlanId: 90,
+    destTarget: '10.20.90.11 (SCADA Historian & IoT Hub)',
+    targetIp: '10.20.90.11',
+    protocol: 'TCP',
+    port: 502,
+    action: 'PERMIT',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 150 permit ip 10.20.50.0 0.0.0.255 host 10.20.90.11',
+    rationale: 'Permits shopfloor PLCs to record temperature, motor vibration, and telemetry into the central historian.',
+    hitCount: 5120
+  },
+  {
+    id: 'RULE-PROD-OT-RESTRICTION',
+    name: 'Production OT Operational Isolation',
+    sourceVlanId: 50,
+    sourceName: 'Production & OT SCADA (VLAN 50)',
+    destTarget: 'Corporate Subnets & Direct Internet',
+    protocol: 'IP',
+    action: 'DENY',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 150 deny ip 10.20.50.0 0.0.0.255 any',
+    rationale: 'Air-gaps critical industrial controllers from corporate malware and stops unauthorized outbound internet traffic.',
+    hitCount: 142
+  },
+  {
+    id: 'RULE-CORP-TO-PROD-DENY',
+    name: 'Corporate Inbound Shield for Production PLCs',
+    sourceVlanId: 0,
+    sourceName: 'Corporate Subnets (VLAN 20, 30, 60, 70)',
+    destVlanId: 50,
+    destTarget: '10.20.50.0/24 (Production PLCs & HMIs)',
+    protocol: 'IP',
+    action: 'DENY',
+    governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)',
+    ciscoCommand: 'access-list 150 deny ip 10.20.0.0 0.0.255.255 10.20.50.0 0.0.0.255',
+    rationale: 'Guards assembly lines from office malware, accidental broadcast storms, or unauthorized control commands.',
+    hitCount: 310
+  },
+  {
+    id: 'RULE-FW-INTERNET-PAT',
+    name: 'Enterprise Outbound Internet with Dynamic PAT',
+    sourceVlanId: 0,
+    sourceName: 'All Internal Enterprise VLANs',
+    destTarget: '0.0.0.0/0 (Public Internet / Cloud)',
+    protocol: 'IP',
+    action: 'PERMIT',
+    governingDevice: 'Cisco ASA 5516-X (Perimeter Firewall)',
+    ciscoCommand: 'nat (inside,outside) dynamic interface',
+    rationale: 'Stateful inspection and Port Address Translation (PAT) translating internal 10.20.0.0/16 IPs to public IP 198.51.100.2.',
+    hitCount: 15420
+  },
+  {
+    id: 'RULE-FW-DMZ-WEB',
+    name: 'Public Inbound Access to DMZ Web Portal',
+    sourceVlanId: 0,
+    sourceName: 'Outside WAN / Internet',
+    destVlanId: 100,
+    destTarget: '10.20.100.10:80,443 (DMZ Web Server)',
+    targetIp: '10.20.100.10',
+    protocol: 'TCP',
+    port: 80,
+    action: 'PERMIT',
+    governingDevice: 'Cisco ASA 5516-X (Perimeter Firewall)',
+    ciscoCommand: 'access-list OUTSIDE_IN extended permit tcp any host 10.20.100.10 eq 80',
+    rationale: 'Permits external customers to access the public enterprise web service while maintaining total isolation from internal LAN.',
+    hitCount: 4210
   }
 ];
 
@@ -667,6 +819,16 @@ export const INITIAL_DEVICES: NetworkDevice[] = [
         adminStatus: 'up',
         speedMbps: 100,
         connectedTo: { deviceId: 'dev-iot-01', interfaceId: 'eth0' }
+      },
+      {
+        id: 'Fa0/9',
+        name: 'FastEthernet0/9',
+        macAddress: '00:1c:58:33:03:10',
+        mode: 'access',
+        accessVlan: 70,
+        adminStatus: 'up',
+        speedMbps: 100,
+        connectedTo: { deviceId: 'dev-attacker-01', interfaceId: 'eth0' }
       }
     ],
     macTable: [
@@ -1111,6 +1273,33 @@ export const INITIAL_DEVICES: NetworkDevice[] = [
     arpTable: [{ ipAddress: '10.20.72.1', macAddress: '00:1c:58:11:bb:03', interfaceId: 'wlan0', type: 'DYNAMIC' }]
   },
 
+  // Rogue Threat Actor / Attacker Device (Simulated Penetration Testing Rig)
+  {
+    id: 'dev-attacker-01',
+    name: 'Rogue Threat Actor (Kali Linux)',
+    hostname: 'ATTACKER-KALI-01',
+    type: 'attacker',
+    model: 'Kali Linux 2026.1 / Alfa AWUS036ACM Penetration Rig',
+    location: 'Building 3 - Unsecured Visitor Drop (VLAN 70)',
+    x: 960,
+    y: 575,
+    interfaces: [{
+      id: 'eth0',
+      name: 'eth0 (Raw Socket / Promiscuous)',
+      macAddress: '00:1c:58:99:66:66',
+      ipAddress: '10.20.72.66',
+      subnetMask: '255.255.252.0',
+      mode: 'access',
+      accessVlan: 70,
+      adminStatus: 'up',
+      speedMbps: 1000,
+      connectedTo: { deviceId: 'dev-acc-sw-c', interfaceId: 'Fa0/9' }
+    }],
+    defaultGateway: '10.20.72.1',
+    dnsServer: '10.20.80.11',
+    arpTable: [{ ipAddress: '10.20.72.1', macAddress: '00:1c:58:11:bb:03', interfaceId: 'eth0', type: 'DYNAMIC' }]
+  },
+
   // VLAN 80: Internal Core Servers
   {
     id: 'dev-srv-dc',
@@ -1424,6 +1613,7 @@ export const INITIAL_LINKS: NetworkLink[] = [
   { id: 'link-c-fa6', sourceDeviceId: 'dev-acc-sw-c', sourceInterfaceId: 'Fa0/6', targetDeviceId: 'dev-srv-erp', targetInterfaceId: 'eth0', linkType: 'access', status: 'up', colorHex: '#3b82f6' },
   { id: 'link-c-fa7', sourceDeviceId: 'dev-acc-sw-c', sourceInterfaceId: 'Fa0/7', targetDeviceId: 'dev-print-01', targetInterfaceId: 'eth0', linkType: 'access', status: 'up', colorHex: '#14b8a6' },
   { id: 'link-c-fa8', sourceDeviceId: 'dev-acc-sw-c', sourceInterfaceId: 'Fa0/8', targetDeviceId: 'dev-iot-01', targetInterfaceId: 'eth0', linkType: 'access', status: 'up', colorHex: '#14b8a6' },
+  { id: 'link-c-fa9', sourceDeviceId: 'dev-acc-sw-c', sourceInterfaceId: 'Fa0/9', targetDeviceId: 'dev-attacker-01', targetInterfaceId: 'eth0', linkType: 'access', status: 'up', colorHex: '#ef4444' },
   // Access Links - DMZ Switch
   { id: 'link-dmz-fa1', sourceDeviceId: 'dev-dmz-sw-01', sourceInterfaceId: 'Fa0/1', targetDeviceId: 'dev-dmz-web', targetInterfaceId: 'eth0', linkType: 'access', status: 'up', colorHex: '#ef4444' },
   { id: 'link-dmz-fa2', sourceDeviceId: 'dev-dmz-sw-01', sourceInterfaceId: 'Fa0/2', targetDeviceId: 'dev-dmz-vpn', targetInterfaceId: 'eth0', linkType: 'access', status: 'up', colorHex: '#ef4444' }
@@ -1433,6 +1623,7 @@ export const INITIAL_NETWORK_STATE: NetworkState = {
   devices: INITIAL_DEVICES,
   links: INITIAL_LINKS,
   vlans: INITIAL_VLANS,
+  interVlanRules: INITIAL_INTER_VLAN_RULES,
   transitSubnet: '10.20.254.0/30',
   activeFaults: [],
   validationResults: []

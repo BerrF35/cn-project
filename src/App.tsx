@@ -8,6 +8,10 @@ import { TrafficLabWorkspace } from './workspaces/TrafficLabWorkspace';
 import { ConfigStudioWorkspace } from './workspaces/ConfigStudioWorkspace';
 import { FaultLabWorkspace } from './workspaces/FaultLabWorkspace';
 import { ValidationWorkspace } from './workspaces/ValidationWorkspace';
+import { SecurityFirewallWorkspace } from './workspaces/SecurityFirewallWorkspace';
+import { PerformanceWorkspace } from './workspaces/PerformanceWorkspace';
+import { CyberAttackModal } from './components/CyberAttackModal';
+import { PacketTracerModal } from './components/PacketTracerModal';
 import { SubnetPlannerModal } from './components/SubnetPlannerModal';
 import { PresentationModal } from './components/PresentationModal';
 import { SwitchAnatomy } from './components/SwitchAnatomy';
@@ -32,6 +36,8 @@ export const App: React.FC = () => {
       <main className="flex-1 flex overflow-hidden">
         {activeWorkspace === 'topology' && <TopologyWorkspace />}
         {activeWorkspace === 'traffic' && <TrafficLabWorkspace />}
+        {activeWorkspace === 'security' && <SecurityFirewallWorkspace />}
+        {activeWorkspace === 'performance' && <PerformanceWorkspace />}
         {activeWorkspace === 'studio' && <ConfigStudioWorkspace />}
         {activeWorkspace === 'faults' && <FaultLabWorkspace />}
         {activeWorkspace === 'validation' && <ValidationWorkspace />}
@@ -40,6 +46,8 @@ export const App: React.FC = () => {
       {/* Global Overlays & Modals */}
       <SubnetPlannerModal />
       <PresentationModal />
+      <CyberAttackModal />
+      <PacketTracerModal />
 
       {/* Switch Silicon Anatomy Cutaway Modal */}
       {showAnatomyModal && (

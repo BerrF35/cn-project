@@ -1,5 +1,3 @@
-// Application Header & Primary Navigation
-
 import React from 'react';
 import { useNetwork, WorkspaceTab } from '../context/NetworkContext';
 import { 
@@ -12,7 +10,10 @@ import {
   Cpu, 
   Presentation, 
   RotateCcw,
-  Shield
+  Shield,
+  BarChart3,
+  Skull,
+  FileCode2
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -23,6 +24,8 @@ export const Header: React.FC = () => {
     setShowAnatomyModal,
     setShowSubnetPlanner,
     setShowPresentationMode,
+    setShowAttackModal,
+    setShowPacketTracerModal,
     resetToInitial
   } = useNetwork();
 
@@ -33,6 +36,8 @@ export const Header: React.FC = () => {
   const tabs: { id: WorkspaceTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'topology', label: 'Topology', icon: Network },
     { id: 'traffic', label: 'Traffic Lab', icon: Activity },
+    { id: 'security', label: 'Security & Firewall', icon: Shield },
+    { id: 'performance', label: 'Performance Analysis', icon: BarChart3 },
     { id: 'studio', label: 'Config Studio (CLI)', icon: Terminal },
     { id: 'faults', label: 'Fault Lab', icon: AlertTriangle },
     { id: 'validation', label: 'Validation & Report', icon: CheckCircle2 }
@@ -104,6 +109,26 @@ export const Header: React.FC = () => {
 
         {/* Utility & Presentation Actions */}
         <div className="flex items-center gap-2">
+          {/* Packet Tracer Deployment Hub */}
+          <button
+            onClick={() => setShowPacketTracerModal(true)}
+            title="Open Cisco Packet Tracer 8.2+ Scripts & Deployment Guide"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-sky-300 bg-sky-950/40 hover:bg-sky-900/60 border border-sky-800/50 hover:border-sky-500 transition"
+          >
+            <FileCode2 className="w-3.5 h-3.5 text-[#38bdf8]" />
+            <span className="hidden md:inline">Packet Tracer Hub</span>
+          </button>
+
+          {/* Cyber Attack Simulation Console */}
+          <button
+            onClick={() => setShowAttackModal(true)}
+            title="Open Penetration Testing & Threat Defense Console"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-300 bg-red-950/50 hover:bg-red-900/70 border border-red-500/50 hover:border-red-400 transition"
+          >
+            <Skull className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+            <span className="hidden md:inline">Cyber Attack</span>
+          </button>
+
           {/* Subnet Planner Tool */}
           <button
             onClick={() => setShowSubnetPlanner(true)}

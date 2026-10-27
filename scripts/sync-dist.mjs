@@ -21,7 +21,6 @@ if (fs.existsSync('dist/assets')) {
 }
 if (fs.existsSync('dist')) {
   copyDir('dist', 'docs');
-  fs.copyFileSync('dist/index.html', 'index.html');
 }
 if (fs.existsSync('public/.nojekyll')) {
   fs.copyFileSync('public/.nojekyll', '.nojekyll');

@@ -19,6 +19,7 @@ export interface SimulationParams {
   destinationIp?: string;
   customDomain?: string; // For DNS
   targetPort?: number; // For TCP
+  vlanId?: number;
 }
 
 export function simulateTraffic(
@@ -757,64 +758,89 @@ export function simulateTraffic(
                   const dstVlanId = dstVlanDef ? dstVlanDef.id : (dstDev?.interfaces[0]?.accessVlan || 80);
 
                   // =========================================================================
-                  // Authoritative Policy-Based Inter-VLAN Security Matrix
+                  // Authoritative Policy-Based Inter-VLAN Security Matrix (Dynamically Governed)
                   // =========================================================================
+                  const rules = state.interVlanRules || [];
 
                   // Rule 1: Zero-Trust Guest Isolation
-                  // Guests (VLAN 70) cannot access ANY internal enterprise departments or data center servers
-                  if (srcVlan === 70) {
+                  const guestRule = rules.find(r => r.id === 'RULE-GUEST-ISOLATION');
+                  if (srcVlan === 70 && (!guestRule || guestRule.action === 'DENY')) {
                     const isInternal = targetIp.startsWith('10.20.') || [10, 20, 30, 40, 50, 60, 80, 90].includes(dstVlanId);
                     if (isInternal) {
                       isBlockedByPolicy = true;
-                      blockingReason = 'ACL 170 ZERO-TRUST DENY: Guest Wi-Fi (VLAN 70) is strictly blocked from all internal enterprise departments & data center servers';
+                      blockingReason = guestRule 
+                        ? `ACL 170 ZERO-TRUST DENY (${guestRule.ciscoCommand}): ${guestRule.rationale}`
+                        : 'ACL 170 ZERO-TRUST DENY: Guest Wi-Fi (VLAN 70) is strictly blocked from all internal enterprise departments & data center servers';
+                      if (guestRule) guestRule.hitCount = (guestRule.hitCount || 0) + 1;
                     }
                   }
 
                   // Rule 2: HR Security Policy (VLAN 20)
-                  // HR can access designated HR services (Active Directory / HR Portal dev-srv-dc 10.20.80.10, DNS dev-srv-dns 10.20.80.11, default gateway, and internet)
-                  // BUT is denied direct access to Accounting/ERP Database (dev-srv-erp 10.20.80.12) and Production PLCs (VLAN 50)
+                  const hrErpRule = rules.find(r => r.id === 'RULE-HR-ERP-DENY');
+                  const corpProdRule = rules.find(r => r.id === 'RULE-CORP-TO-PROD-DENY');
                   if (srcVlan === 20) {
                     if (targetIp === '10.20.80.12' || dstDev?.id === 'dev-srv-erp') {
-                      isBlockedByPolicy = true;
-                      blockingReason = 'ACL 120 POLICY DENY: HR Department (VLAN 20) is restricted from direct access to Accounting/ERP Database (10.20.80.12). HR can only access designated HR Portal (10.20.80.10)';
+                      if (!hrErpRule || hrErpRule.action === 'DENY') {
+                        isBlockedByPolicy = true;
+                        blockingReason = hrErpRule
+                          ? `ACL 120 POLICY DENY (${hrErpRule.ciscoCommand}): ${hrErpRule.rationale}`
+                          : 'ACL 120 POLICY DENY: HR Department (VLAN 20) is restricted from direct access to Accounting/ERP Database (10.20.80.12)';
+                        if (hrErpRule) hrErpRule.hitCount = (hrErpRule.hitCount || 0) + 1;
+                      }
                     } else if (dstVlanId === 50 || dstDev?.id?.startsWith('dev-prod-')) {
-                      isBlockedByPolicy = true;
-                      blockingReason = 'ACL 120 POLICY DENY: HR Department (VLAN 20) is prohibited from accessing Industrial Production PLCs (VLAN 50)';
+                      if (!corpProdRule || corpProdRule.action === 'DENY') {
+                        isBlockedByPolicy = true;
+                        blockingReason = 'ACL 120 POLICY DENY: HR Department (VLAN 20) is prohibited from accessing Industrial Production PLCs (VLAN 50)';
+                        if (corpProdRule) corpProdRule.hitCount = (corpProdRule.hitCount || 0) + 1;
+                      }
                     }
                   }
 
                   // Rule 3: Finance Security Policy (VLAN 30)
-                  // Finance can access approved accounting services (ERP & Accounting DB dev-srv-erp 10.20.80.12, DNS dev-srv-dns 10.20.80.11, gateway, and internet)
-                  // BUT is denied access to HR Personnel/Compensation records (dev-srv-dc 10.20.80.10) and Production PLCs (VLAN 50)
+                  const finHrRule = rules.find(r => r.id === 'RULE-FIN-HR-DENY');
                   if (srcVlan === 30) {
                     if (targetIp === '10.20.80.10' || dstDev?.id === 'dev-srv-dc') {
-                      isBlockedByPolicy = true;
-                      blockingReason = 'ACL 130 POLICY DENY: Finance Department (VLAN 30) is restricted from confidential HR Personnel records (10.20.80.10). Finance must access approved Accounting ERP (10.20.80.12)';
+                      if (!finHrRule || finHrRule.action === 'DENY') {
+                        isBlockedByPolicy = true;
+                        blockingReason = finHrRule
+                          ? `ACL 130 POLICY DENY (${finHrRule.ciscoCommand}): ${finHrRule.rationale}`
+                          : 'ACL 130 POLICY DENY: Finance Department (VLAN 30) is restricted from confidential HR Personnel records (10.20.80.10)';
+                        if (finHrRule) finHrRule.hitCount = (finHrRule.hitCount || 0) + 1;
+                      }
                     } else if (dstVlanId === 50 || dstDev?.id?.startsWith('dev-prod-')) {
-                      isBlockedByPolicy = true;
-                      blockingReason = 'ACL 130 POLICY DENY: Finance Department (VLAN 30) is prohibited from accessing Industrial Production PLCs (VLAN 50)';
+                      if (!corpProdRule || corpProdRule.action === 'DENY') {
+                        isBlockedByPolicy = true;
+                        blockingReason = 'ACL 130 POLICY DENY: Finance Department (VLAN 30) is prohibited from accessing Industrial Production PLCs (VLAN 50)';
+                        if (corpProdRule) corpProdRule.hitCount = (corpProdRule.hitCount || 0) + 1;
+                      }
                     }
                   }
 
                   // Rule 4: Production OT (SCADA) Security Policy (VLAN 50)
-                  // Production devices can communicate ONLY with required operational services:
-                  // - Operational Historian & SCADA Hub (dev-iot-01 10.20.90.11 on VLAN 90)
-                  // - Intra-VLAN production controllers
-                  // Denied: general corporate departments (VLAN 20, 30, 60, 70), corporate servers (dev-srv-dc, dev-srv-erp), and direct public internet
+                  const prodOtRule = rules.find(r => r.id === 'RULE-PROD-OT-RESTRICTION');
                   if (srcVlan === 50) {
                     const isOperationalService = targetIp === '10.20.90.11' || dstDev?.id === 'dev-iot-01' || dstVlanId === 90;
                     const isCoreGateway = core.svis?.some(s => s.ipAddress === targetIp);
                     if (!isOperationalService && !isCoreGateway) {
-                      isBlockedByPolicy = true;
-                      blockingReason = 'ACL 150 OPERATIONAL POLICY DENY: Production OT (VLAN 50) is restricted to required operational services (VLAN 90 SCADA Historian) only';
+                      if (!prodOtRule || prodOtRule.action === 'DENY') {
+                        isBlockedByPolicy = true;
+                        blockingReason = prodOtRule
+                          ? `ACL 150 OPERATIONAL POLICY DENY (${prodOtRule.ciscoCommand}): ${prodOtRule.rationale}`
+                          : 'ACL 150 OPERATIONAL POLICY DENY: Production OT (VLAN 50) is restricted to required operational services (VLAN 90 SCADA Historian) only';
+                        if (prodOtRule) prodOtRule.hitCount = (prodOtRule.hitCount || 0) + 1;
+                      }
                     }
                   }
 
                   // Rule 5: Inbound protection for Production OT (VLAN 50)
-                  // Standard corporate departments cannot probe or initiate sessions to Production PLCs
                   if (dstVlanId === 50 && [20, 30, 60, 70].includes(srcVlan)) {
-                    isBlockedByPolicy = true;
-                    blockingReason = 'ACL 150 INBOUND DENY: Corporate endpoints are prohibited from direct access to Industrial Production PLCs (VLAN 50)';
+                    if (!corpProdRule || corpProdRule.action === 'DENY') {
+                      isBlockedByPolicy = true;
+                      blockingReason = corpProdRule
+                        ? `ACL 150 INBOUND DENY (${corpProdRule.ciscoCommand}): ${corpProdRule.rationale}`
+                        : 'ACL 150 INBOUND DENY: Corporate endpoints are prohibited from direct access to Industrial Production PLCs (VLAN 50)';
+                      if (corpProdRule) corpProdRule.hitCount = (corpProdRule.hitCount || 0) + 1;
+                    }
                   }
 
                   if (isBlockedByPolicy) {

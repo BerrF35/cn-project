@@ -17,8 +17,11 @@ import {
   Cpu,
   Clock,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  Download,
+  Code2
 } from 'lucide-react';
+import { downloadTracePcap, formatWiresharkHexDump, buildRawFrameBytes } from '../engine/pcapExport';
 
 export const TrafficLabWorkspace: React.FC = () => {
   const { state, runSimulation, setSelectedDeviceId } = useNetwork();
@@ -34,6 +37,7 @@ export const TrafficLabWorkspace: React.FC = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1); // 0.5x, 1x, 2x
+  const [showHexDump, setShowHexDump] = useState<boolean>(false);
 
   const lastTrace = state.lastTrace;
   const currentStep: SimulationStep | undefined = lastTrace?.steps[currentStepIndex];
@@ -385,12 +389,48 @@ export const TrafficLabWorkspace: React.FC = () => {
                   Protocol Header Dissection (OSI Layers 2 &ndash; 7)
                 </h3>
               </div>
-              {currentStep.has8021qTag && (
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-purple-950 text-purple-300 border border-purple-800">
-                  802.1Q Encapsulated (VID {currentStep.vlanId})
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {currentStep.has8021qTag && (
+                  <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-purple-950 text-purple-300 border border-purple-800">
+                    802.1Q Encapsulated (VID {currentStep.vlanId})
+                  </span>
+                )}
+                <button
+                  onClick={() => setShowHexDump(!showHexDump)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                    showHexDump 
+                      ? 'bg-purple-900/60 border-purple-500 text-purple-200' 
+                      : 'bg-[#131c2e] border-slate-700 text-slate-300 hover:text-white'
+                  }`}
+                  title="Toggle raw binary packet hex dump and byte offsets"
+                >
+                  <Code2 className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Wireshark Hex View</span>
+                </button>
+
+                <button
+                  onClick={() => lastTrace && downloadTracePcap(lastTrace)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold text-xs shadow border border-emerald-500/50 transition active:scale-95"
+                  title="Download standard libpcap binary packet trace file for Wireshark"
+                >
+                  <Download className="w-3.5 h-3.5 text-white" />
+                  <span>Export .PCAP (Wireshark)</span>
+                </button>
+              </div>
             </div>
+
+            {/* Wireshark Raw Hex Dump Section */}
+            {showHexDump && (
+              <div className="bg-[#05070d] p-3.5 rounded-xl border border-purple-500/30 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-mono text-purple-300 border-b border-purple-900/40 pb-1.5">
+                  <span className="font-bold">Raw Packet Hex Dump (Offset | Hex Bytes | ASCII)</span>
+                  <span className="text-slate-400">Frame Length: {buildRawFrameBytes(currentStep).length} Bytes</span>
+                </div>
+                <pre className="font-mono text-[11px] text-purple-200 leading-relaxed overflow-x-auto select-all">
+                  {formatWiresharkHexDump(buildRawFrameBytes(currentStep))}
+                </pre>
+              </div>
+            )}
 
             <div className="space-y-3 font-mono text-xs">
               {/* Layer 2: Ethernet II Header */}

@@ -10,7 +10,8 @@ export type DeviceType =
   | 'printer'
   | 'iot'
   | 'access_point'
-  | 'cloud_router';
+  | 'cloud_router'
+  | 'attacker';
 
 export type PortMode = 'access' | 'trunk' | 'routed';
 export type InterfaceAdminStatus = 'up' | 'down';
@@ -278,10 +279,29 @@ export interface ValidationTestResult {
   traceId?: string;
 }
 
+export interface InterVlanSecurityRule {
+  id: string;
+  name: string;
+  sourceVlanId: number; // 20, 30, 50, 70, etc. (0 for ANY/Corporate)
+  sourceName: string;
+  destVlanId?: number;
+  destTarget: string; // e.g. "10.20.80.12 (Accounting ERP)" or "10.20.80.10 (HR Portal)"
+  targetIp?: string;
+  protocol: 'IP' | 'TCP' | 'UDP' | 'ICMP';
+  port?: number | string;
+  action: 'PERMIT' | 'DENY';
+  governingDevice: 'Cisco Catalyst 3850 (L3 Core ACL)' | 'Cisco ASA 5516-X (Perimeter Firewall)';
+  ciscoCommand: string;
+  rationale: string;
+  hitCount: number;
+  isCustom?: boolean;
+}
+
 export interface NetworkState {
   devices: NetworkDevice[];
   links: NetworkLink[];
   vlans: VlanDefinition[];
+  interVlanRules: InterVlanSecurityRule[];
   transitSubnet: string;
   activeFaults: string[];
   lastTrace?: SimulationTrace;

@@ -25,7 +25,8 @@ import {
   AlertTriangle,
   Zap,
   X,
-  ExternalLink
+  ExternalLink,
+  Skull
 } from 'lucide-react';
 
 export const TopologyWorkspace: React.FC = () => {
@@ -38,6 +39,7 @@ export const TopologyWorkspace: React.FC = () => {
     activeVlanFilter, 
     setActiveVlanFilter,
     setShowAnatomyModal,
+    setShowAttackModal,
     setActiveWorkspace,
     runSimulation
   } = useNetwork();
@@ -310,6 +312,8 @@ export const TopologyWorkspace: React.FC = () => {
   // Helper to render distinct device icons
   const renderDeviceIcon = (type: string) => {
     switch (type) {
+      case 'attacker':
+        return <Skull className="w-5 h-5 text-red-400 animate-pulse" />;
       case 'firewall':
         return <Shield className="w-5 h-5 text-rose-400" />;
       case 'l3_core':
@@ -419,6 +423,16 @@ export const TopologyWorkspace: React.FC = () => {
             >
               <Zap className="w-3.5 h-3.5 text-yellow-300 animate-bounce" />
               <span>Simulate All 4 Simultaneously</span>
+            </button>
+
+            {/* Rogue Attacker / Cyber Attack Button */}
+            <button
+              onClick={() => setShowAttackModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-950/40 transition active:scale-95"
+              title="Simulate Layer 2/3 Cyber Attacks (VLAN Hopping, ARP Poisoning, SYN Flood)"
+            >
+              <Skull className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+              <span>Cyber Attack Console</span>
             </button>
 
             {/* Quick individual policy simulations */}
@@ -688,22 +702,32 @@ export const TopologyWorkspace: React.FC = () => {
                       </circle>
                     )}
 
+                    {/* Attacker Pulsing Threat Aura */}
+                    {dev.type === 'attacker' && (
+                      <circle cx="0" cy="0" r="26" fill="none" stroke="#ef4444" strokeWidth="1.5">
+                        <animate attributeName="r" values="20;30;20" dur="1.8s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.8s" repeatCount="indefinite" />
+                      </circle>
+                    )}
+
                     {/* Node Body */}
                     <circle
                       cx="0"
                       cy="0"
-                      r={dev.type === 'l3_core' ? 22 : dev.type === 'firewall' ? 20 : 16}
+                      r={dev.type === 'l3_core' ? 22 : dev.type === 'firewall' ? 20 : dev.type === 'attacker' ? 18 : 16}
                       fill={
                         dev.type === 'l3_core'
                           ? '#0284c7'
                           : dev.type === 'firewall'
                           ? '#991b1b'
+                          : dev.type === 'attacker'
+                          ? '#7f1d1d'
                           : dev.type === 'l2_switch'
                           ? '#1e293b'
                           : '#131c2e'
                       }
-                      stroke={isSelected ? '#38bdf8' : dev.type === 'l2_switch' ? '#6366f1' : '#334155'}
-                      strokeWidth={isSelected ? 3 : 2}
+                      stroke={isSelected ? '#38bdf8' : dev.type === 'attacker' ? '#ef4444' : dev.type === 'l2_switch' ? '#6366f1' : '#334155'}
+                      strokeWidth={isSelected ? 3 : dev.type === 'attacker' ? 2.5 : 2}
                     />
 
                     {/* Icon centered */}
@@ -845,6 +869,7 @@ export const TopologyWorkspace: React.FC = () => {
               timestamp: new Date().toLocaleTimeString()
             });
           }}
+          onLaunchAttack={() => setShowAttackModal(true)}
         />
       )}
     </div>

@@ -12,7 +12,8 @@ import {
   X, 
   Building2, 
   Server, 
-  ArrowRight
+  ArrowRight,
+  Skull
 } from 'lucide-react';
 
 interface DeviceContextMenuProps {
@@ -27,6 +28,7 @@ interface DeviceContextMenuProps {
   onInspect: (device: NetworkDevice) => void;
   onOpenCli: (device: NetworkDevice) => void;
   onArpBroadcast: (device: NetworkDevice) => void;
+  onLaunchAttack?: () => void;
 }
 
 export const DeviceContextMenu: React.FC<DeviceContextMenuProps> = ({
@@ -40,7 +42,8 @@ export const DeviceContextMenu: React.FC<DeviceContextMenuProps> = ({
   onStartCanvasTargetSelect,
   onInspect,
   onOpenCli,
-  onArpBroadcast
+  onArpBroadcast,
+  onLaunchAttack
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +116,25 @@ export const DeviceContextMenu: React.FC<DeviceContextMenuProps> = ({
       </div>
 
       <div className="p-2 space-y-1">
+        {/* If attacker device, show cyber attack action */}
+        {device.type === 'attacker' && onLaunchAttack && (
+          <button
+            onClick={() => {
+              onClose();
+              onLaunchAttack();
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg bg-gradient-to-r from-red-950/80 to-rose-950/80 hover:from-red-900 hover:to-rose-900 text-red-200 border border-red-500/60 font-black transition shadow-lg shadow-red-950/50 mb-1"
+          >
+            <div className="flex items-center gap-2">
+              <Skull className="w-4 h-4 text-red-400 animate-pulse" />
+              <span>Simulate Cyber Attack</span>
+            </div>
+            <span className="text-[10px] font-mono bg-red-600 px-1.5 py-0.5 rounded text-white font-bold">
+              KALI
+            </span>
+          </button>
+        )}
+
         {/* Interactive Canvas Target Selector */}
         <button
           onClick={() => {

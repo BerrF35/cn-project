@@ -1,13 +1,13 @@
 // Global Network Simulation State Context
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { NetworkState, NetworkDevice, NetworkLink, SimulationTrace } from '../types/network';
+import { NetworkState, NetworkDevice, NetworkLink, SimulationTrace, InterVlanSecurityRule } from '../types/network';
 import { INITIAL_NETWORK_STATE } from '../engine/initialData';
 import { simulateTraffic, SimulationParams } from '../engine/simulator';
 import { FAULT_SCENARIOS } from '../engine/faults';
 import { runValidationSuite } from '../engine/validation';
 
-export type WorkspaceTab = 'topology' | 'traffic' | 'studio' | 'faults' | 'validation';
+export type WorkspaceTab = 'topology' | 'traffic' | 'security' | 'performance' | 'studio' | 'faults' | 'validation';
 
 interface NetworkContextType {
   state: NetworkState;
@@ -25,6 +25,13 @@ interface NetworkContextType {
   setShowSubnetPlanner: (show: boolean) => void;
   showPresentationMode: boolean;
   setShowPresentationMode: (show: boolean) => void;
+  showAttackModal: boolean;
+  setShowAttackModal: (show: boolean) => void;
+  showPacketTracerModal: boolean;
+  setShowPacketTracerModal: (show: boolean) => void;
+  toggleInterVlanRule: (ruleId: string) => void;
+  updateInterVlanRule: (rule: InterVlanSecurityRule) => void;
+  resetInterVlanRules: () => void;
   updateDevice: (device: NetworkDevice) => void;
   updateLink: (link: NetworkLink) => void;
   runSimulation: (params: SimulationParams) => SimulationTrace;
@@ -53,6 +60,31 @@ export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [showAnatomyModal, setShowAnatomyModal] = useState<boolean>(false);
   const [showSubnetPlanner, setShowSubnetPlanner] = useState<boolean>(false);
   const [showPresentationMode, setShowPresentationMode] = useState<boolean>(false);
+  const [showAttackModal, setShowAttackModal] = useState<boolean>(false);
+  const [showPacketTracerModal, setShowPacketTracerModal] = useState<boolean>(false);
+
+  const toggleInterVlanRule = (ruleId: string) => {
+    setState(prev => ({
+      ...prev,
+      interVlanRules: prev.interVlanRules.map(r => 
+        r.id === ruleId ? { ...r, action: r.action === 'PERMIT' ? 'DENY' : 'PERMIT' } : r
+      )
+    }));
+  };
+
+  const updateInterVlanRule = (updated: InterVlanSecurityRule) => {
+    setState(prev => ({
+      ...prev,
+      interVlanRules: prev.interVlanRules.map(r => r.id === updated.id ? updated : r)
+    }));
+  };
+
+  const resetInterVlanRules = () => {
+    setState(prev => ({
+      ...prev,
+      interVlanRules: INITIAL_NETWORK_STATE.interVlanRules
+    }));
+  };
 
   const updateDevice = (updated: NetworkDevice) => {
     setState(prev => ({
@@ -134,6 +166,13 @@ export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children })
         setShowSubnetPlanner,
         showPresentationMode,
         setShowPresentationMode,
+        showAttackModal,
+        setShowAttackModal,
+        showPacketTracerModal,
+        setShowPacketTracerModal,
+        toggleInterVlanRule,
+        updateInterVlanRule,
+        resetInterVlanRules,
         updateDevice,
         updateLink,
         runSimulation,
